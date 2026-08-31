@@ -5,11 +5,42 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.dependencies.auth import AuthServiceDep
 from app.dependencies.user import UserServiceDep
-from app.schemas.auth import AccessTokenResponse
+from app.schemas.auth import (
+    AccessTokenResponse,
+    AuthTokensData,
+    SessionLoginRequest,
+    SessionRefreshRequest,
+)
 from app.schemas.common import ApiResponse
 from app.schemas.user import UserData, UserRegisterRequest
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+
+
+@router.post("/session")
+def create_session(
+    request: SessionLoginRequest,
+    service: AuthServiceDep,
+) -> ApiResponse[AuthTokensData]:
+    tokens = service.create_session(email=str(request.email), password=request.password)
+    return ApiResponse(data=tokens)
+
+
+@router.post("/session/refresh")
+def refresh_session(
+    request: SessionRefreshRequest,
+    service: AuthServiceDep,
+) -> ApiResponse[AuthTokensData]:
+    tokens = service.refresh_session(refresh_token=request.refresh_token)
+    return ApiResponse(data=tokens)
+
+
+@router.post("/session/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout_session(
+    request: SessionRefreshRequest,
+    service: AuthServiceDep,
+) -> None:
+    service.revoke_session(refresh_token=request.refresh_token)
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)

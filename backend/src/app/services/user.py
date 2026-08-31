@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from uuid import UUID
 
 from app.core.security import hash_password, verify_password
@@ -9,6 +10,7 @@ from app.exceptions import (
     SelfAdministrationError,
     UserNotFoundError,
 )
+from app.repositories.auth_session import AuthSessionRepository
 from app.repositories.user import (
     DuplicateUserRecordError,
     UserRecordCreate,
@@ -160,6 +162,10 @@ class UserService:
                 user=user,
                 hashed_password=hash_password(new_password),
             )
+            AuthSessionRepository(session).revoke_all_for_user(
+                user.id,
+                revoked_at=datetime.now(UTC),
+            )
             session.commit()
 
     def update_user_as_admin(
@@ -193,6 +199,11 @@ class UserService:
                 raise UserNotFoundError
             try:
                 repository.replace(user=user, data=record)
+                if password is not None:
+                    AuthSessionRepository(session).revoke_all_for_user(
+                        user.id,
+                        revoked_at=datetime.now(UTC),
+                    )
                 session.commit()
             except DuplicateUserRecordError:
                 session.rollback()

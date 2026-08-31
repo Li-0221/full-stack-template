@@ -15,6 +15,7 @@ class AppSettings(BaseSettings):
     secret_key: Annotated[SecretStr, Field(min_length=32)]
     # 防止配置为立即失效或意外长期有效的 access token, 最长允许一天。
     access_token_expire_minutes: Annotated[int, Field(gt=0, le=1440)] = 30
+    refresh_token_expire_days: Annotated[int, Field(gt=0, le=90)] = 7
 
 
 class DatabaseSettings(BaseSettings):

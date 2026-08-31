@@ -1,8 +1,90 @@
 import secrets
+from time import time
 
 from fastapi.testclient import TestClient
 
 from tests.support import AccountFactory
+
+
+def test_create_browser_session_returns_refreshable_tokens(
+    client: TestClient,
+    account_factory: AccountFactory,
+) -> None:
+    account = account_factory.create()
+
+    response = client.post(
+        "/api/v1/auth/session",
+        json={"email": account.user.email, "password": account.password},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["code"] == 0
+    tokens = response.json()["data"]
+    assert set(tokens) == {
+        "accessToken",
+        "accessExpiresAt",
+        "refreshToken",
+        "refreshExpiresAt",
+    }
+    assert tokens["accessToken"]
+    assert tokens["refreshToken"]
+    assert tokens["accessExpiresAt"] > int(time() * 1000)
+    assert tokens["refreshExpiresAt"] > tokens["accessExpiresAt"]
+
+    me_response = client.get(
+        "/api/v1/users/me",
+        headers={"Authorization": f"Bearer {tokens['accessToken']}"},
+    )
+    assert me_response.status_code == 200
+    assert me_response.json()["data"]["id"] == str(account.user.id)
+
+
+def test_refresh_rotates_token_and_rejects_replay(
+    client: TestClient,
+    account_factory: AccountFactory,
+) -> None:
+    account = account_factory.create()
+    login_response = client.post(
+        "/api/v1/auth/session",
+        json={"email": account.user.email, "password": account.password},
+    )
+    original = login_response.json()["data"]
+
+    refresh_response = client.post(
+        "/api/v1/auth/session/refresh",
+        json={"refreshToken": original["refreshToken"]},
+    )
+
+    assert refresh_response.status_code == 200
+    rotated = refresh_response.json()["data"]
+    assert rotated["accessToken"] != original["accessToken"]
+    assert rotated["refreshToken"] != original["refreshToken"]
+
+    replay_response = client.post(
+        "/api/v1/auth/session/refresh",
+        json={"refreshToken": original["refreshToken"]},
+    )
+    assert replay_response.status_code == 401
+    assert replay_response.json()["code"] == 10001
+
+
+def test_logout_revokes_refresh_token_idempotently(
+    client: TestClient,
+    account_factory: AccountFactory,
+) -> None:
+    account = account_factory.create()
+    login_response = client.post(
+        "/api/v1/auth/session",
+        json={"email": account.user.email, "password": account.password},
+    )
+    refresh_token = login_response.json()["data"]["refreshToken"]
+    payload = {"refreshToken": refresh_token}
+
+    assert client.post("/api/v1/auth/session/logout", json=payload).status_code == 204
+    assert client.post("/api/v1/auth/session/logout", json=payload).status_code == 204
+
+    refresh_response = client.post("/api/v1/auth/session/refresh", json=payload)
+    assert refresh_response.status_code == 401
 
 
 def test_register_login_and_read_current_user(client: TestClient) -> None:

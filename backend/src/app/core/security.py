@@ -1,6 +1,8 @@
 from datetime import UTC, datetime, timedelta
+from hashlib import sha256
+from secrets import token_urlsafe
 from typing import Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import jwt
 from jwt import InvalidTokenError
@@ -13,6 +15,7 @@ password_hash = PasswordHash.recommended()
 
 class AccessTokenClaims(BaseModel):
     sub: UUID
+    jti: UUID
     exp: datetime
     iat: datetime
     type: Literal["access"]
@@ -30,10 +33,19 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return password_hash.verify(password, hashed_password)
 
 
+def create_refresh_token() -> str:
+    return token_urlsafe(48)
+
+
+def hash_refresh_token(token: str) -> str:
+    return sha256(token.encode()).hexdigest()
+
+
 def create_access_token(*, subject: UUID, secret_key: str, expires_minutes: int) -> str:
     issued_at = datetime.now(UTC)
     claims = AccessTokenClaims(
         sub=subject,
+        jti=uuid4(),
         exp=issued_at + timedelta(minutes=expires_minutes),
         iat=issued_at,
         type="access",

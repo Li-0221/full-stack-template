@@ -258,6 +258,70 @@ def test_current_user_can_change_password(
     assert new_login.status_code == 200
 
 
+def test_password_change_revokes_all_refresh_sessions(
+    client: TestClient,
+    user_account: AccountFixture,
+) -> None:
+    login_response = client.post(
+        "/api/v1/auth/session",
+        json={
+            "email": user_account.user.email,
+            "password": user_account.password,
+        },
+    )
+    tokens = login_response.json()["data"]
+
+    change_response = client.put(
+        "/api/v1/users/me/password",
+        headers={"Authorization": f"Bearer {tokens['accessToken']}"},
+        json={
+            "currentPassword": user_account.password,
+            "newPassword": secrets.token_urlsafe(24),
+        },
+    )
+
+    assert change_response.status_code == 204
+    refresh_response = client.post(
+        "/api/v1/auth/session/refresh",
+        json={"refreshToken": tokens["refreshToken"]},
+    )
+    assert refresh_response.status_code == 401
+
+
+def test_admin_password_reset_revokes_all_refresh_sessions(
+    client: TestClient,
+    admin_account: AccountFixture,
+    user_account: AccountFixture,
+) -> None:
+    login_response = client.post(
+        "/api/v1/auth/session",
+        json={
+            "email": user_account.user.email,
+            "password": user_account.password,
+        },
+    )
+    tokens = login_response.json()["data"]
+
+    update_response = client.put(
+        f"/api/v1/users/{user_account.user.id}",
+        headers=login_headers(client, admin_account),
+        json={
+            "email": user_account.user.email,
+            "fullName": user_account.user.full_name,
+            "password": secrets.token_urlsafe(24),
+            "isActive": user_account.user.is_active,
+            "isSuperuser": user_account.user.is_superuser,
+        },
+    )
+
+    assert update_response.status_code == 200
+    refresh_response = client.post(
+        "/api/v1/auth/session/refresh",
+        json={"refreshToken": tokens["refreshToken"]},
+    )
+    assert refresh_response.status_code == 401
+
+
 def test_password_change_rejects_incorrect_current_password(
     client: TestClient,
     user_account: AccountFixture,

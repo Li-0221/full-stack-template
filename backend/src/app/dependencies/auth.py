@@ -21,6 +21,7 @@ def get_auth_service(manager: DatabaseManagerDep) -> AuthService:
         manager=manager,
         secret_key=settings.secret_key.get_secret_value(),
         access_token_expire_minutes=settings.access_token_expire_minutes,
+        refresh_token_expire_days=settings.refresh_token_expire_days,
     )
 
 

@@ -19,10 +19,12 @@ def test_migration_upgrade_and_downgrade(
 
     command.upgrade(config, "head")
     assert inspect(database_engine).has_table("users")
+    assert inspect(database_engine).has_table("auth_sessions")
     command.check(config)
 
     command.downgrade(config, "base")
     assert not inspect(database_engine).has_table("users")
+    assert not inspect(database_engine).has_table("auth_sessions")
     get_database_settings.cache_clear()
 
 
@@ -37,6 +39,8 @@ def test_offline_migration_accepts_percent_encoded_database_url(
     get_database_settings.cache_clear()
     try:
         command.upgrade(Config("alembic.ini"), "head", sql=True)
-        assert "CREATE TABLE users" in capsys.readouterr().out
+        migration_sql = capsys.readouterr().out
+        assert "CREATE TABLE users" in migration_sql
+        assert "CREATE TABLE auth_sessions" in migration_sql
     finally:
         get_database_settings.cache_clear()
