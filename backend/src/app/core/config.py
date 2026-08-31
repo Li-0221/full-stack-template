@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, HttpUrl, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DATABASE_URL_DRIVER_ERROR = "database_url must use postgresql+psycopg"
@@ -16,6 +16,14 @@ class AppSettings(BaseSettings):
     # 防止配置为立即失效或意外长期有效的 access token, 最长允许一天。
     access_token_expire_minutes: Annotated[int, Field(gt=0, le=1440)] = 30
     refresh_token_expire_days: Annotated[int, Field(gt=0, le=90)] = 7
+    cors_origins: tuple[HttpUrl, ...] = (
+        HttpUrl("http://localhost:5176"),
+        HttpUrl("http://localhost:3000"),
+    )
+
+    @property
+    def cors_origin_values(self) -> tuple[str, ...]:
+        return tuple(str(origin).rstrip("/") for origin in self.cors_origins)
 
 
 class DatabaseSettings(BaseSettings):

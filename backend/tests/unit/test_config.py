@@ -21,6 +21,22 @@ def test_database_url_rejects_non_postgresql_driver() -> None:
         DatabaseSettings(database_url="unsupported")
 
 
+def test_cors_origins_can_be_overridden_from_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(
+        "APP_CORS_ORIGINS",
+        '["https://admin.example.com","https://preview.example.com"]',
+    )
+
+    settings = AppSettings(secret_key="x" * 32)
+
+    assert settings.cors_origin_values == (
+        "https://admin.example.com",
+        "https://preview.example.com",
+    )
+
+
 def test_application_requires_database_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("APP_DATABASE_URL", raising=False)
     get_database_settings.cache_clear()

@@ -3,7 +3,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.routing import APIRoute
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import get_app_settings, get_database_settings
@@ -16,6 +18,11 @@ from app.exception_handlers import (
 )
 from app.exceptions import AppError
 from app.middleware import RequestIdMiddleware
+
+
+def generate_operation_id(route: APIRoute) -> str:
+    tag = route.tags[0] if route.tags else "untagged"
+    return f"{tag}-{route.name}"
 
 
 @asynccontextmanager
@@ -41,8 +48,15 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
         lifespan=application_lifespan,
+        generate_unique_id_function=generate_operation_id,
     )
     application.add_middleware(RequestIdMiddleware)
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_values,
+        allow_methods=["DELETE", "GET", "OPTIONS", "POST", "PUT"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
     application.add_exception_handler(AppError, handle_app_error)  # type: ignore[arg-type]
     application.add_exception_handler(
         RequestValidationError,

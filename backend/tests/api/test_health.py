@@ -17,8 +17,38 @@ def test_health_check(client: TestClient) -> None:
     assert response.headers["X-Request-ID"]
 
 
+def test_cors_allows_configured_frontend_origin(client: TestClient) -> None:
+    response = client.options(
+        "/api/v1/health",
+        headers={
+            "Origin": "http://localhost:5176",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["Access-Control-Allow-Origin"] == "http://localhost:5176"
+
+
+def test_cors_does_not_allow_unknown_origin(client: TestClient) -> None:
+    response = client.options(
+        "/api/v1/health",
+        headers={
+            "Origin": "https://unknown.example.com",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert "Access-Control-Allow-Origin" not in response.headers
+
+
 def test_openapi_matches_put_and_path_runtime_contract(client: TestClient) -> None:
     schema = client.get("/api/v1/openapi.json").json()
+    assert schema["paths"]["/api/v1/health"]["get"]["operationId"] == ("health-health_check")
+    assert schema["paths"]["/api/v1/auth/session"]["post"]["operationId"] == (
+        "authentication-create_session"
+    )
+    assert schema["paths"]["/api/v1/users"]["get"]["operationId"] == ("users-list_users")
     assert "delete" not in schema["paths"]["/api/v1/users/me"]
 
     user_path = schema["paths"]["/api/v1/users/{userId}"]
@@ -48,7 +78,7 @@ def test_openapi_matches_put_and_path_runtime_contract(client: TestClient) -> No
     assert set(password_schema["required"]) == {"currentPassword", "newPassword"}
 
     list_parameters = schema["paths"]["/api/v1/users"]["get"]["parameters"]
-    assert [parameter["name"] for parameter in list_parameters] == ["page", "pagesize"]
+    assert [parameter["name"] for parameter in list_parameters] == ["page", "pageSize"]
 
 
 def test_method_not_allowed_keeps_protocol_header(client: TestClient) -> None:
