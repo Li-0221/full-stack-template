@@ -184,7 +184,7 @@ class UserService:
                 raise UserNotFoundError
             try:
                 repository.replace(user=user, data=record)
-                if password is not None:
+                if password is not None or not is_active:
                     AuthSessionRepository(session).revoke_all_for_user(
                         user.id,
                         revoked_at=datetime.now(UTC),
