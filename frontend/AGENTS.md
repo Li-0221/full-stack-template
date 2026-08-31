@@ -153,6 +153,7 @@
 ## 依赖、生成文件与代码质量
 
 - 使用 pnpm 修改依赖和 lockfile，不手工编辑 `pnpm-lock.yaml`。
+- `src/client/**` 由后端 OpenAPI 生成，禁止手工编辑；先更新后端契约和 `openapi.json`，再运行 `pnpm generate:client`。
 - 引入依赖前先确认现有库无法合理完成需求；不要并存第二套路由、请求、表单、状态或组件系统。
 - TypeScript 保持 strict，优先明确类型和类型导入，不使用 `any` 逃避契约。
 - 不使用 `@ts-ignore`、关闭 lint 规则或扩大 ignore 范围掩盖问题；局部禁用必须说明第三方限制，并保持最小范围。

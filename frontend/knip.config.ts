@@ -6,6 +6,7 @@ const config: KnipConfig = {
     'src/hooks/use-debounced-search.ts',
   ],
   ignore: [
+    'src/client/**',
     'src/components/ui/**',
     'src/components/layout/app-title.tsx',
     'src/tanstack-table.d.ts',

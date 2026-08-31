@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
+    "generate:client": "openapi-ts && prettier --write src/client",
     "knip": "knip",
     "test": "vitest run --browser.headless",
     "test:watch": "vitest --browser.headless",
@@ -70,6 +71,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@faker-js/faker": "^10.4.0",
+    "@hey-api/openapi-ts": "0.97.3",
     "@tanstack/eslint-plugin-query": "^5.99.0",
     "@tanstack/react-query-devtools": "^5.99.0",
     "@tanstack/react-router-devtools": "^1.166.13",
