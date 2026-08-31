@@ -18,8 +18,13 @@ def test_migration_upgrade_and_downgrade(
     config = Config("alembic.ini")
 
     command.upgrade(config, "head")
-    assert inspect(database_engine).has_table("users")
-    assert inspect(database_engine).has_table("auth_sessions")
+    database_inspector = inspect(database_engine)
+    assert database_inspector.has_table("users")
+    assert database_inspector.has_table("auth_sessions")
+    auth_session_indexes = {
+        index["name"] for index in database_inspector.get_indexes("auth_sessions")
+    }
+    assert "ix_auth_sessions_expires_at" in auth_session_indexes
     command.check(config)
 
     command.downgrade(config, "base")
@@ -42,5 +47,6 @@ def test_offline_migration_accepts_percent_encoded_database_url(
         migration_sql = capsys.readouterr().out
         assert "CREATE TABLE users" in migration_sql
         assert "CREATE TABLE auth_sessions" in migration_sql
+        assert "CREATE INDEX ix_auth_sessions_expires_at" in migration_sql
     finally:
         get_database_settings.cache_clear()

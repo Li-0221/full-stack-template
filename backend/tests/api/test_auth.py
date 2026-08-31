@@ -1,8 +1,12 @@
 import secrets
+from datetime import UTC, datetime, timedelta
 from time import time
 
 from fastapi.testclient import TestClient
+from sqlalchemy import func, select
 
+from app.db.session import DatabaseSessionManager
+from app.models.auth_session import AuthSession
 from tests.support import AccountFactory
 
 
@@ -39,9 +43,10 @@ def test_create_browser_session_returns_refreshable_tokens(
     assert me_response.json()["data"]["id"] == str(account.user.id)
 
 
-def test_refresh_rotates_token_and_rejects_replay(
+def test_refresh_rotates_token_in_place_and_rejects_replay(
     client: TestClient,
     account_factory: AccountFactory,
+    database_manager: DatabaseSessionManager,
 ) -> None:
     account = account_factory.create()
     login_response = client.post(
@@ -59,6 +64,9 @@ def test_refresh_rotates_token_and_rejects_replay(
     rotated = refresh_response.json()["data"]
     assert rotated["accessToken"] != original["accessToken"]
     assert rotated["refreshToken"] != original["refreshToken"]
+    with database_manager.session_scope() as session:
+        session_count = session.scalar(select(func.count()).select_from(AuthSession))
+    assert session_count == 1
 
     replay_response = client.post(
         "/api/v1/auth/session/refresh",
@@ -66,6 +74,84 @@ def test_refresh_rotates_token_and_rejects_replay(
     )
     assert replay_response.status_code == 401
     assert replay_response.json()["code"] == 10001
+
+    latest_refresh_response = client.post(
+        "/api/v1/auth/session/refresh",
+        json={"refreshToken": rotated["refreshToken"]},
+    )
+    assert latest_refresh_response.status_code == 200
+    with database_manager.session_scope() as session:
+        session_count = session.scalar(select(func.count()).select_from(AuthSession))
+    assert session_count == 1
+
+
+def test_create_session_removes_expired_sessions(
+    client: TestClient,
+    account_factory: AccountFactory,
+    database_manager: DatabaseSessionManager,
+) -> None:
+    account = account_factory.create()
+    first_login = client.post(
+        "/api/v1/auth/session",
+        json={"email": account.user.email, "password": account.password},
+    )
+    assert first_login.status_code == 200
+    with database_manager.session_scope() as session:
+        auth_session = session.scalar(select(AuthSession))
+        assert auth_session is not None
+        auth_session.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+        session.commit()
+
+    second_login = client.post(
+        "/api/v1/auth/session",
+        json={"email": account.user.email, "password": account.password},
+    )
+    assert second_login.status_code == 200
+    with database_manager.session_scope() as session:
+        session_count = session.scalar(select(func.count()).select_from(AuthSession))
+    assert session_count == 1
+
+
+def test_refresh_session_removes_other_expired_sessions(
+    client: TestClient,
+    account_factory: AccountFactory,
+    database_manager: DatabaseSessionManager,
+) -> None:
+    expired_account = account_factory.create()
+    active_account = account_factory.create()
+    expired_login = client.post(
+        "/api/v1/auth/session",
+        json={
+            "email": expired_account.user.email,
+            "password": expired_account.password,
+        },
+    )
+    assert expired_login.status_code == 200
+    active_login = client.post(
+        "/api/v1/auth/session",
+        json={"email": active_account.user.email, "password": active_account.password},
+    )
+    assert active_login.status_code == 200
+    with database_manager.session_scope() as session:
+        expired_session = session.scalar(
+            select(AuthSession).where(AuthSession.user_id == expired_account.user.id)
+        )
+        assert expired_session is not None
+        expired_session.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+        session.commit()
+
+    refresh_response = client.post(
+        "/api/v1/auth/session/refresh",
+        json={"refreshToken": active_login.json()["data"]["refreshToken"]},
+    )
+    assert refresh_response.status_code == 200
+    with database_manager.session_scope() as session:
+        session_count = session.scalar(select(func.count()).select_from(AuthSession))
+        expired_session = session.scalar(
+            select(AuthSession).where(AuthSession.user_id == expired_account.user.id)
+        )
+    assert session_count == 1
+    assert expired_session is None
 
 
 def test_logout_revokes_refresh_token_idempotently(

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.models.auth_session import AuthSession
@@ -39,6 +39,26 @@ class AuthSessionRepository:
 
     def revoke(self, auth_session: AuthSession, *, revoked_at: datetime) -> None:
         auth_session.revoked_at = revoked_at
+        self.session.flush()
+
+    def rotate(
+        self,
+        auth_session: AuthSession,
+        *,
+        refresh_token_hash: str,
+        expires_at: datetime,
+    ) -> None:
+        auth_session.refresh_token_hash = refresh_token_hash
+        auth_session.expires_at = expires_at
+        self.session.flush()
+
+    def delete_expired(self, *, expired_at: datetime) -> None:
+        statement = (
+            delete(AuthSession)
+            .where(AuthSession.expires_at <= expired_at)
+            .execution_options(synchronize_session=False)
+        )
+        self.session.execute(statement)
         self.session.flush()
 
     def revoke_all_for_user(self, user_id: UUID, *, revoked_at: datetime) -> None:

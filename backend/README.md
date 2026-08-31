@@ -51,7 +51,7 @@ uv run python -m app.scripts.create_superuser
 - PUT 表示完整替换；`fullName: null` 表示清空姓名，write-only 密码省略或传 `null` 表示不修改。
 - 接口路径、参数和响应字段以 OpenAPI 为准。
 
-refresh token 以 hash 保存并在每次刷新时轮换。修改密码或停用账号会撤销 refresh sessions；停用或删除账号也会让旧 access token 无法继续通过用户状态检查。
+refresh token 仅以 hash 保存并原子轮换，轮换后的旧 token 无法再次使用。登出、修改密码或停用账号会撤销相关 refresh sessions；停用或删除账号也会让旧 access token 无法继续通过用户状态检查。登录和刷新成功时会顺带清理已过期的 refresh sessions。
 
 ## Migration
 

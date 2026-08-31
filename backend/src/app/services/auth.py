@@ -112,7 +112,9 @@ class AuthService:
             expires_at=refresh_expires_at,
         )
         with self.manager.session_scope() as session:
-            AuthSessionRepository(session).create(record)
+            repository = AuthSessionRepository(session)
+            repository.delete_expired(expired_at=issued_at)
+            repository.create(record)
             session.commit()
         return AuthTokensData(
             access_token=access_token,
@@ -138,13 +140,11 @@ class AuthService:
             user = UserRepository(session).get_by_id(auth_session.user_id)
             if user is None or not user.is_active:
                 raise AuthenticationRequiredError
-            repository.revoke(auth_session, revoked_at=issued_at)
-            repository.create(
-                AuthSessionRecordCreate(
-                    user_id=user.id,
-                    refresh_token_hash=hash_refresh_token(rotated_refresh_token),
-                    expires_at=rotated_refresh_expires_at,
-                )
+            repository.delete_expired(expired_at=issued_at)
+            repository.rotate(
+                auth_session,
+                refresh_token_hash=hash_refresh_token(rotated_refresh_token),
+                expires_at=rotated_refresh_expires_at,
             )
             session.commit()
 

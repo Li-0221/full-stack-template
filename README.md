@@ -7,7 +7,7 @@
 - FastAPI、Pydantic v2、SQLAlchemy 2、Alembic、PostgreSQL
 - React 19、Vite、TanStack Router、TanStack Query、shadcn/ui
 - `Router -> Service -> Repository` 后端分层
-- access token、refresh token 轮换、重放保护和前端 single-flight refresh
+- access token、refresh token 原子轮换、旧 refresh token 失效和前端 single-flight refresh
 - 管理员用户 CRUD、当前用户资料与密码修改；不提供公开注册
 - OpenAPI 生成 TypeScript SDK
 - Docker Compose 本地全栈环境
