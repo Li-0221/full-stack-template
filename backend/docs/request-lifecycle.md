@@ -5,8 +5,8 @@
 ## 成功路径
 
 ```text
-Vue / 浏览器
-   ↓ HTTP Request
+React / 浏览器
+   ↓ HTTP 请求
 FastAPI + RequestIdMiddleware
    ↓ 路由匹配、参数校验、依赖与认证
 Router（传入已校验字段、调用 Service）
@@ -20,8 +20,8 @@ Service 返回安全的 typed Data / Result / Facts，并关闭 Session
 Router 组装 ApiResponse
    ↓
 FastAPI 序列化；Middleware 添加 X-Request-ID
-   ↓ HTTP Response
-Vue / 浏览器
+   ↓ HTTP 响应
+React / 浏览器
 ```
 
 请求进入时，[`RequestIdMiddleware`](../src/app/middleware.py) 为请求生成关联 ID。响应返回时，同一个 Middleware 把该 ID 写入 `X-Request-ID` header。应用在 [`main.py`](../src/app/main.py) 注册 Middleware、异常处理器和 API Router。
@@ -89,14 +89,14 @@ Command 不是 FastAPI 的要求，也不代表项目实现了完整 CQRS。它�
 任意请求阶段发生异常
    ├─ Pydantic / FastAPI 参数校验失败 → HTTP 422 / 业务码 10009
    ├─ 已知 AppError                   → 错误定义拥有的 HTTP 状态与业务码
-   ├─ 路由或 HTTP method 错误         → HTTP 404 / 405，业务码 10010
+   ├─ 路由或 HTTP 方法错误             → HTTP 404 / 405，业务码 10010
    └─ 未处理异常                      → HTTP 500 / 业务码 10011
    ↓
-Exception Handler
+异常处理器
    ↓
 ErrorResponse + X-Request-ID
-   ↓ HTTP Response
-Vue / 浏览器
+   ↓ HTTP 响应
+React / 浏览器
 ```
 
 统一转换位于 [`exception_handlers.py`](../src/app/exception_handlers.py)。异常响应不会暴露 stack、SQL、内部 URL、headers 或原始 payload。已知业务异常由 Service 抛出并原样交给统一 handler，不在 Router 重复包装。

@@ -1,4 +1,4 @@
-# Full Stack FastAPI + React Template
+# FastAPI + React 全栈模板
 
 这是一个可直接运行的前后端模板，组合了分层 FastAPI 后端和 React 管理端。它不是把两个项目放在同一个仓库里而已：后端 OpenAPI 是唯一接口契约，前端 SDK 从该契约生成，认证、分页和用户管理已经完整打通。
 

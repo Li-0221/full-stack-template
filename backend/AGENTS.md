@@ -1,4 +1,4 @@
-# FastAPI Starter 项目指令
+# FastAPI 模板项目指令
 
 ## 适用范围
 

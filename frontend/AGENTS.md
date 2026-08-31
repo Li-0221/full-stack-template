@@ -132,7 +132,7 @@
 - 新增浏览器运行时 `VITE_*` 变量时，必须同时更新 `.env.example`、`src/vite-env.d.ts`、`public/env-config.js`、`src/lib/env.ts` 及相关测试。
 - 一旦变量声明在 `public/env-config.js`，Docker entrypoint 会将它视为必填；不得为可选变量填入静默默认值绕过启动校验。
 - 仅供 Vite 构建或本地开发使用的变量不要加入 `public/env-config.js`。
-- 在 tg-server 启动开发服务时使用项目端口 `5176` 并监听 `0.0.0.0`；Mac 访问地址为 `http://192.168.0.115:5176`。
+- 需要从其他设备访问开发服务时，使用项目端口 `5176` 并监听 `0.0.0.0`；浏览器通过开发主机的实际地址访问。
 
 ## Docker 与 Nginx
 

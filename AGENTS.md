@@ -1,11 +1,12 @@
-# Full Stack Template Rules
+# 全栈模板规则
 
-- The backend OpenAPI schema is the only API contract owner.
-- Keep backend request flow as Router -> Service -> Repository -> PostgreSQL.
-- Generate `frontend/openapi.json` and `frontend/src/client` with `make generate-client`; never edit generated client files manually.
-- Use the generated OpenAPI client types directly for backend-owned endpoints. Do not duplicate generated response models with handwritten runtime schemas; add runtime parsing only for external, untyped, persisted, or demonstrably drift-prone data.
-- Pagination is exclusively `page` and `pageSize` in both request and response contracts.
-- Preserve rotating refresh sessions, replay protection, single-flight frontend refresh, and idempotent logout.
-- Use repository-relative paths in code, configuration, documentation, and scripts. Never commit machine-specific absolute paths.
-- Keep commits reviewable and split by business concern. Do not commit `.env`, credentials, build output, coverage, browser artifacts, or local database files.
-- Finish tasks with checks scoped to the changed behavior. Run full test suites only when shared infrastructure, cross-cutting contracts, high-risk behavior, or the release boundary makes them necessary.
+- 后端 OpenAPI schema 是接口契约的唯一所有者。
+- 后端请求链路保持为 Router -> Service -> Repository -> PostgreSQL。
+- 使用 `make generate-client` 生成 `frontend/openapi.json` 和 `frontend/src/client`，禁止手工修改生成的客户端文件。
+- 后端拥有的接口直接使用 OpenAPI 生成的客户端类型。不得用手写运行时 schema 重复定义生成的响应模型；只有外部、未类型化、持久化或已有明确漂移证据的数据才增加运行时解析。
+- 请求和响应契约的分页字段统一使用 `page` 和 `pageSize`。
+- 保留 refresh session 轮换、重放保护、前端 single-flight 刷新和幂等退出。
+- 代码、配置、文档和脚本统一使用仓库相对路径，禁止提交机器相关的绝对路径。
+- 所有 Markdown 文档的说明性内容使用中文；代码标识、命令、路径、协议字段和技术名称保持原样。
+- 提交应便于审查，并按业务关注点拆分。不得提交 `.env`、凭据、构建产物、覆盖率、浏览器产物或本地数据库文件。
+- 完成任务时运行覆盖本次改动行为的最小检查。只有共享基础设施、跨模块契约、高风险行为或发布边界发生变化时，才运行全量测试。
