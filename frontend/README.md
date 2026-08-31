@@ -69,9 +69,6 @@ docker run --rm -p 3000:3000 \
   full-stack-template-frontend
 ```
 
-The checked-in `.gitlab-ci.yml` is intentionally fully commented. Enable and
-configure CI/CD only in a product repository created from this starter.
-
 ## API And Authentication
 
 All API endpoints use a numeric `code`; `0` means success. The shared request

@@ -1,8 +1,0 @@
-# This starter pipeline is intentionally disabled.
-# Uncomment and configure it only after copying the starter into a product repository.
-#
-# include:
-#   - component: $CI_SERVER_FQDN/ops/frontend-ci-components/vite-app@~latest
-#
-# variables:
-#   GITOPS_APP_PATH: apps/<group>/<application>

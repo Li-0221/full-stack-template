@@ -6,9 +6,10 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
 
-RUN corepack enable \
+RUN --mount=type=cache,target=/pnpm/store \
+    corepack enable \
     && corepack prepare pnpm@10.34.3 --activate \
-    && pnpm install --frozen-lockfile --store-dir=/app/.pnpm-store --package-import-method=copy
+    && pnpm install --frozen-lockfile --store-dir=/pnpm/store --package-import-method=copy
 
 COPY . .
 
