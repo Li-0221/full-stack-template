@@ -9,6 +9,8 @@
 !tsconfig.json
 !tsconfig.node.json
 !vite.config.ts
+!playwright.config.ts
+!/e2e
 !.prettierrc
 !README.md
 !eslint.config.js

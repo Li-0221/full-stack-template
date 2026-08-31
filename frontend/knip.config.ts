@@ -2,6 +2,7 @@ import type { KnipConfig } from 'knip'
 
 const config: KnipConfig = {
   entry: [
+    'playwright.config.ts',
     'src/components/date-time-picker.tsx',
     'src/hooks/use-debounced-search.ts',
   ],

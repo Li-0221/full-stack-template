@@ -106,6 +106,18 @@ cd frontend
 pnpm test:browser:install
 ```
 
+启动前后端并创建本地管理员后，可以运行真实登录与 Users CRUD E2E：
+
+```bash
+cd frontend
+E2E_BASE_URL=http://localhost:5176 \
+E2E_ADMIN_EMAIL=admin@example.com \
+E2E_ADMIN_PASSWORD=replace-with-local-password \
+pnpm test:e2e
+```
+
+E2E 凭据只通过当前 shell 环境传入，不写入 `.env`、配置或测试代码。
+
 ## 环境变量
 
 根目录 `.env.example` 只服务于本地 Docker Compose。复制后可以修改端口和本地数据库值，但不要提交 `.env`。

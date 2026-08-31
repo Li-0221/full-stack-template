@@ -64,6 +64,7 @@ export default defineConfig(({ command, mode }) => {
       port: resolveDevPort(env.VITE_DEV_PORT),
     },
     test: {
+      include: ['src/**/*.test.{ts,tsx}'],
       silent: 'passed-only',
       unstubEnvs: true,
       browser: {

@@ -56,6 +56,16 @@ pnpm format:check
 pnpm knip
 ```
 
+Full-stack authentication and Users CRUD can be verified against a running
+backend and frontend without storing credentials:
+
+```bash
+E2E_BASE_URL=http://localhost:5176 \
+E2E_ADMIN_EMAIL=admin@example.com \
+E2E_ADMIN_PASSWORD=replace-with-local-password \
+pnpm test:e2e
+```
+
 ## Container
 
 The production image serves the application with Nginx and exposes `/healthz`.
