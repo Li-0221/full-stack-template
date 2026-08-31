@@ -1,120 +1,111 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { toast } from 'sonner'
+import { type Collapsible, useLayout } from '@/context/layout-provider'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
-  FormControl,
   FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-
-const items = [
-  {
-    id: 'recents',
-    label: 'Recents',
-  },
-  {
-    id: 'home',
-    label: 'Home',
-  },
-  {
-    id: 'applications',
-    label: 'Applications',
-  },
-  {
-    id: 'desktop',
-    label: 'Desktop',
-  },
-  {
-    id: 'downloads',
-    label: 'Downloads',
-  },
-  {
-    id: 'documents',
-    label: 'Documents',
-  },
-] as const
+import { useSidebar } from '@/components/ui/sidebar'
+import { SelectDropdown } from '@/components/select-dropdown'
 
 const displayFormSchema = z.object({
-  items: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: 'You have to select at least one item.',
-  }),
+  sidebar: z.enum(['inset', 'floating', 'sidebar']),
+  navigation: z.enum(['default', 'compact', 'offcanvas']),
 })
 
 type DisplayFormValues = z.infer<typeof displayFormSchema>
 
-// This can come from your database or API.
-const defaultValues: Partial<DisplayFormValues> = {
-  items: ['recents', 'home'],
-}
+const sidebarOptions = [
+  { label: 'Inset', value: 'inset' },
+  { label: 'Floating', value: 'floating' },
+  { label: 'Standard', value: 'sidebar' },
+]
+
+const navigationOptions = [
+  { label: 'Expanded', value: 'default' },
+  { label: 'Compact icons', value: 'compact' },
+  { label: 'Off-canvas', value: 'offcanvas' },
+]
 
 export function DisplayForm() {
+  const { open, setOpen } = useSidebar()
+  const { collapsible, setCollapsible, setVariant, variant } = useLayout()
   const form = useForm<DisplayFormValues>({
     resolver: zodResolver(displayFormSchema),
-    defaultValues,
+    defaultValues: {
+      sidebar: variant,
+      navigation: open
+        ? 'default'
+        : collapsible === 'offcanvas'
+          ? 'offcanvas'
+          : 'compact',
+    },
   })
+
+  function onSubmit(values: DisplayFormValues) {
+    setVariant(values.sidebar)
+    if (values.navigation === 'default') {
+      setOpen(true)
+    } else {
+      const nextCollapsible: Collapsible =
+        values.navigation === 'compact' ? 'icon' : 'offcanvas'
+      setCollapsible(nextCollapsible)
+      setOpen(false)
+    }
+    toast.success('Display preferences updated.')
+  }
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
-        className='space-y-8'
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
         <FormField
           control={form.control}
-          name='items'
-          render={() => (
+          name='sidebar'
+          render={({ field }) => (
             <FormItem>
-              <div className='mb-4'>
-                <FormLabel className='text-base'>Sidebar</FormLabel>
-                <FormDescription>
-                  Select the items you want to display in the sidebar.
-                </FormDescription>
-              </div>
-              {items.map((item) => (
-                <FormField
-                  key={item.id}
-                  control={form.control}
-                  name='items'
-                  render={({ field }) => {
-                    return (
-                      <FormItem
-                        key={item.id}
-                        className='flex flex-row items-start'
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...field.value, item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item.id
-                                    )
-                                  )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className='font-normal'>
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    )
-                  }}
-                />
-              ))}
+              <FormLabel>Sidebar style</FormLabel>
+              <SelectDropdown
+                isControlled
+                defaultValue={field.value}
+                onValueChange={field.onChange}
+                items={sidebarOptions}
+                className='w-64'
+              />
+              <FormDescription>
+                Choose how the sidebar is framed within the application shell.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type='submit'>Update display</Button>
+        <FormField
+          control={form.control}
+          name='navigation'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Navigation layout</FormLabel>
+              <SelectDropdown
+                isControlled
+                defaultValue={field.value}
+                onValueChange={field.onChange}
+                items={navigationOptions}
+                className='w-64'
+              />
+              <FormDescription>
+                Keep navigation expanded or reduce it to save workspace.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type='submit'>Save display preferences</Button>
       </form>
     </Form>
   )

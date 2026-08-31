@@ -17,6 +17,7 @@ export {
   EyeOff,
   Laptop,
   LayoutDashboard,
+  Loader,
   Loader2,
   LoaderCircle,
   LogIn,

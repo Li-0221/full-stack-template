@@ -1,5 +1,5 @@
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { appConfig } from '@/config/app'
 import { getDisplayNameInitials } from '@/lib/utils'
 import useDialogState from '@/hooks/use-dialog-state'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -15,11 +15,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SignOutDialog } from '@/components/sign-out-dialog'
+import { currentUserQueryOptions } from '@/features/settings/data/current-user-api'
 
 export function ProfileDropdown() {
   const [open, setOpen] = useDialogState()
-  const user = appConfig.defaultUser
-  const initials = getDisplayNameInitials(user.name)
+  const currentUserQuery = useQuery(currentUserQueryOptions())
+  const user = currentUserQuery.data
+  const name = user?.fullName || user?.email || 'Account'
+  const email = user?.email || ''
+  const initials = getDisplayNameInitials(name)
 
   return (
     <>
@@ -27,9 +31,7 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
             <Avatar className='h-8 w-8'>
-              {user.avatar ? (
-                <AvatarImage src={user.avatar} alt={user.name} />
-              ) : null}
+              <AvatarImage alt={name} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
           </Button>
@@ -37,9 +39,9 @@ export function ProfileDropdown() {
         <DropdownMenuContent className='w-56' align='end' forceMount>
           <DropdownMenuLabel className='font-normal'>
             <div className='flex flex-col gap-1.5'>
-              <p className='text-sm leading-none font-medium'>{user.name}</p>
+              <p className='text-sm leading-none font-medium'>{name}</p>
               <p className='text-xs leading-none text-muted-foreground'>
-                {user.email}
+                {email}
               </p>
             </div>
           </DropdownMenuLabel>
@@ -52,8 +54,8 @@ export function ProfileDropdown() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to='/settings/account'>
-                Account
+              <Link to='/settings/security'>
+                Security
                 <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
               </Link>
             </DropdownMenuItem>

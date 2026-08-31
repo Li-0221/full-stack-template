@@ -5,7 +5,7 @@ export function SettingsDisplay() {
   return (
     <ContentSection
       title='Display'
-      desc="Turn items on or off to control what's displayed in the app."
+      desc='Choose a layout that is saved in this browser.'
     >
       <DisplayForm />
     </ContentSection>

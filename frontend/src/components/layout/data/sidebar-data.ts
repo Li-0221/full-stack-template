@@ -12,7 +12,6 @@ import {
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
-  user: appConfig.defaultUser,
   teams: [
     {
       name: appConfig.defaultOrganization.name,
@@ -49,8 +48,8 @@ export const sidebarData: SidebarData = {
               icon: UserCog,
             },
             {
-              title: 'Account',
-              url: '/settings/account',
+              title: 'Security',
+              url: '/settings/security',
               icon: Wrench,
             },
             {

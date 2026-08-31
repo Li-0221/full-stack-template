@@ -18,9 +18,10 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Laptop } from '@/components/icons'
 
 const appearanceFormSchema = z.object({
-  theme: z.enum(['light', 'dark']),
+  theme: z.enum(['light', 'dark', 'system']),
   font: z.enum(fonts),
 })
 
@@ -32,7 +33,7 @@ export function AppearanceForm() {
 
   // This can come from your database or API.
   const defaultValues: Partial<AppearanceFormValues> = {
-    theme: theme as 'light' | 'dark',
+    theme,
     font,
   }
 
@@ -96,8 +97,21 @@ export function AppearanceForm() {
               <RadioGroup
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                className='grid max-w-md grid-cols-2 gap-8 pt-2'
+                className='grid max-w-2xl grid-cols-3 gap-6 pt-2'
               >
+                <FormItem>
+                  <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>
+                    <FormControl>
+                      <RadioGroupItem value='system' className='sr-only' />
+                    </FormControl>
+                    <div className='flex aspect-[4/3] items-center justify-center rounded-md border-2 border-muted bg-muted/40 p-1 hover:border-accent'>
+                      <Laptop className='size-10 text-muted-foreground' />
+                    </div>
+                    <span className='block w-full p-2 text-center font-normal'>
+                      System
+                    </span>
+                  </FormLabel>
+                </FormItem>
                 <FormItem>
                   <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>
                     <FormControl>
