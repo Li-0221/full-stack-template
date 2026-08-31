@@ -1,19 +1,16 @@
 # FastAPI + React 全栈模板
 
-这是一个可直接运行的前后端模板，组合了分层 FastAPI 后端和 React 管理端。它不是把两个项目放在同一个仓库里而已：后端 OpenAPI 是唯一接口契约，前端 SDK 从该契约生成，认证、分页和用户管理已经完整打通。
+面向中小型后台项目的可运行模板。后端 OpenAPI 是唯一接口契约，前端 SDK 由契约生成；认证、用户管理、分页和错误处理已完整打通。
 
 ## 已包含
 
-- FastAPI、Pydantic v2、SQLAlchemy 2、Alembic 和 PostgreSQL
-- Router -> Service -> Repository 的清晰后端分层
-- React 19、Vite、TanStack Router、TanStack Query 和 shadcn/ui
-- access token 与可轮换 refresh session，包含重放保护和幂等退出
-- 前端 single-flight token refresh，refresh token 失效后清理本地 session
-- 真实用户列表、新建、完整编辑和删除流程
-- 真实当前用户资料与密码修改，不提供公开注册
-- 后端 OpenAPI -> `@hey-api/openapi-ts` -> TypeScript SDK
-- OpenAPI 生成的前端请求与响应类型，Zod 用于表单和未类型化数据边界
-- Docker Compose 全栈本地环境
+- FastAPI、Pydantic v2、SQLAlchemy 2、Alembic、PostgreSQL
+- React 19、Vite、TanStack Router、TanStack Query、shadcn/ui
+- `Router -> Service -> Repository` 后端分层
+- access token、refresh token 轮换、重放保护和前端 single-flight refresh
+- 管理员用户 CRUD、当前用户资料与密码修改；不提供公开注册
+- OpenAPI 生成 TypeScript SDK
+- Docker Compose 本地全栈环境
 
 ## 快速启动
 
@@ -24,11 +21,8 @@ cp .env.example .env
 docker compose up --build
 ```
 
-首次构建会启动 PostgreSQL、执行 Alembic migration、启动 API，再启动前端。
-
 - 前端：<http://localhost:3000>
 - Swagger UI：<http://localhost:8000/docs>
-- ReDoc：<http://localhost:8000/redoc>
 - 健康检查：<http://localhost:8000/api/v1/health>
 
 创建第一个管理员：
@@ -37,9 +31,18 @@ docker compose up --build
 docker compose exec backend python -m app.scripts.create_superuser
 ```
 
-脚本通过终端隐藏输入密码。模板不包含默认登录密码，也不会把账号或 token 写入仓库。
+模板不包含默认账号或密码。凭据和 token 不应写入仓库。
 
-后台启动和常用操作也可以使用：
+## 本地开发
+
+本机开发需要 Python 3.12、uv 0.11、Node.js 20.19+、pnpm 10.34 和 Docker。
+
+```bash
+make setup
+docker compose up -d db
+```
+
+后端与前端分别启动的命令见 [后端说明](backend/README.md) 和 [前端说明](frontend/README.md)。完整容器编排可使用：
 
 ```bash
 make up
@@ -47,52 +50,16 @@ make logs
 make down
 ```
 
-## 目录
+## 修改接口
 
-```text
-.
-├── backend/           # FastAPI、数据库、migration 和后端测试
-├── frontend/          # React 管理端、生成 SDK 和浏览器测试
-├── compose.yaml       # 本地全栈编排
-├── Makefile           # 初始化、生成和质量检查入口
-└── .env.example       # 仅供本地 Compose 使用的配置示例
-```
+1. 修改后端 schema、route、service 和测试。
+2. 运行 `make generate-client`。
+3. 在前端功能 `data` 层调用生成 SDK。
+4. 检查 OpenAPI、生成代码和消费者差异。
 
-后端和前端各自的实现细节分别见 `backend/README.md` 与 `frontend/README.md`。
+详细步骤与示例见 [前端接口调用工作流](frontend/docs/api-workflow.md)。不要手工修改 `frontend/openapi.json` 或 `frontend/src/client`。
 
-## API 契约和 SDK
-
-修改接口时按固定顺序工作：
-
-1. 修改后端 schema、route、service 及测试。
-2. 运行 `make generate-client`，重新导出 `frontend/openapi.json` 并生成 `frontend/src/client`。
-3. 在前端功能数据层调用生成 SDK；只有外部或未类型化数据才增加最小运行时校验。
-4. 检查 OpenAPI 和生成代码差异，再提交后端与前端消费者。
-
-```bash
-make generate-client
-git diff -- frontend/openapi.json frontend/src/client
-```
-
-不要手工修改生成目录。列表分页只使用 `page` 和 `pageSize`；响应固定为 `items`、`page`、`pageSize` 和 `total`。
-
-## 认证边界
-
-登录、刷新和退出请求使用生成 SDK。refresh token 是不透明随机值，后端只保存 SHA-256 hash；每次刷新都会轮换 token，旧 token 重放会撤销对应用户的 refresh sessions。修改密码也会撤销 refresh sessions。
-
-前端只在认证 store 中保存一份 token session。HTTP `401` 或自定义过期码 `40111` 会触发一次共享刷新请求，原请求最多重试一次。refresh token 被后端拒绝时会清理 session；临时网络错误会保留 session 供重试，已变化的旧 session 不会被恢复。
-
-## 本地开发
-
-直接开发需要 Python 3.12、uv 0.11、Node.js 20.19+ 和 pnpm 10.34。
-
-```bash
-make setup
-```
-
-`make setup` 只安装依赖并在缺少时创建根目录 `.env`。后端单独运行、数据库配置和 migration 说明见后端 README；前端开发端口默认是 `5176`。
-
-常用检查：
+## 检查
 
 ```bash
 make check-generated
@@ -100,14 +67,7 @@ make check-backend
 make check-frontend
 ```
 
-后端完整测试使用 Testcontainers，需要可用的 Docker daemon。前端浏览器测试首次运行前需要安装对应 Chromium：
-
-```bash
-cd frontend
-pnpm test:browser:install
-```
-
-启动前后端并创建本地管理员后，可以运行真实登录与 Users CRUD E2E：
+真实登录与 Users CRUD E2E 需要先启动全栈并创建本地管理员：
 
 ```bash
 cd frontend
@@ -117,14 +77,14 @@ E2E_ADMIN_PASSWORD=replace-with-local-password \
 pnpm test:e2e
 ```
 
-E2E 凭据只通过当前 shell 环境传入，不写入 `.env`、配置或测试代码。
+E2E 凭据只通过当前 shell 传入。
 
-## 环境变量
+## 部署配置
 
-根目录 `.env.example` 只服务于本地 Docker Compose。复制后可以修改端口和本地数据库值，但不要提交 `.env`。
+根目录 `.env.example` 只用于本地 Compose。生产环境应通过 secret manager 提供 `APP_SECRET_KEY`、数据库连接和数据库凭据，并在独立步骤执行 migration。
 
-生产环境必须使用独立 secret manager 提供 `APP_SECRET_KEY`、数据库连接和数据库凭据，并在独立部署步骤执行 migration。前端运行时使用 `VITE_API_BASE_URL` 和 `VITE_APP_BASE_PATH`，无需为不同环境重新构建镜像。
+前端运行时读取 `VITE_API_BASE_URL` 和 `VITE_APP_BASE_PATH`，同一镜像可以用于不同环境。
 
 ## 来源
 
-后端设计参考了 [full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template)。前端源自 [shadcn-admin](https://github.com/satnaing/shadcn-admin)。
+后端参考 [full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template)，前端基于 [shadcn-admin](https://github.com/satnaing/shadcn-admin)。
