@@ -20,6 +20,11 @@ server {
         add_header Cache-Control "no-store";
     }
 
+    location = ${NGINX_APP_BASE_PATH}env-config.js {
+        alias /usr/share/nginx/html/env-config.js;
+        add_header Cache-Control "no-store" always;
+    }
+
     location ${NGINX_APP_BASE_PATH} {
         alias /usr/share/nginx/html/;
         try_files $uri $uri/ ${NGINX_APP_BASE_PATH}index.html;
