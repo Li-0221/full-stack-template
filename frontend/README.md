@@ -151,4 +151,4 @@ Application identity and default placeholder account data live in `src/config/ap
 
 ## Source Attribution
 
-This starter is derived from [shadcn-admin](https://github.com/satnaing/shadcn-admin) and retains its MIT license in `LICENSE`.
+This starter is derived from [shadcn-admin](https://github.com/satnaing/shadcn-admin).

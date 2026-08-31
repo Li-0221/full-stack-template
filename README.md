@@ -11,7 +11,7 @@
 - 前端 single-flight token refresh，失败后清理本地 session
 - 真实用户列表、新建、完整编辑和删除流程
 - 后端 OpenAPI -> `@hey-api/openapi-ts` -> TypeScript SDK
-- 前端数据边界的 Zod 运行时校验
+- OpenAPI 生成的前端请求与响应类型，Zod 用于表单和未类型化数据边界
 - Docker Compose 全栈本地环境
 
 ## 快速启动
@@ -65,7 +65,7 @@ make down
 
 1. 修改后端 schema、route、service 及测试。
 2. 运行 `make generate-client`，重新导出 `frontend/openapi.json` 并生成 `frontend/src/client`。
-3. 在前端功能数据层调用生成 SDK，并用 Zod 校验不可信响应。
+3. 在前端功能数据层调用生成 SDK；只有外部或未类型化数据才增加最小运行时校验。
 4. 检查 OpenAPI 和生成代码差异，再提交后端与前端消费者。
 
 ```bash
@@ -126,4 +126,4 @@ E2E 凭据只通过当前 shell 环境传入，不写入 `.env`、配置或测�
 
 ## 来源
 
-后端设计参考了 [full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template)。前端源自 [shadcn-admin](https://github.com/satnaing/shadcn-admin)，其 MIT License 保留在 `frontend/LICENSE`。
+后端设计参考了 [full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template)。前端源自 [shadcn-admin](https://github.com/satnaing/shadcn-admin)。
