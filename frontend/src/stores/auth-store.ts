@@ -1,23 +1,11 @@
 import type { AuthTokens } from '@/types/api'
 import { create } from 'zustand'
-import { removeCookie } from '@/lib/cookies'
 
 const AUTH_SESSION_STORAGE_KEY = 'full_stack_admin_session_v3'
-const LEGACY_REFRESH_STORAGE_KEY = 'full_stack_admin_refresh_session_v2'
-const LEGACY_TAB_STORAGE_KEY = 'full_stack_admin_session_v1'
-const LEGACY_AUTH_SESSION_COOKIE = 'full_stack_admin_session'
 const AUTH_SESSION_STORAGE_VERSION = 3
-const LEGACY_REFRESH_STORAGE_VERSION = 2
-const LEGACY_TAB_STORAGE_VERSION = 1
 
 interface PersistedAuthSession extends AuthTokens {
   version: typeof AUTH_SESSION_STORAGE_VERSION
-}
-
-interface PersistedRefreshSession {
-  version: number
-  refreshToken: string
-  refreshExpiresAt: number
 }
 
 interface AuthSessionState extends AuthTokens {
@@ -50,29 +38,9 @@ function getLocalStorage() {
   }
 }
 
-function getSessionStorage() {
-  if (typeof window === 'undefined') return null
-
-  try {
-    return window.sessionStorage
-  } catch {
-    return null
-  }
-}
-
-function clearLegacyPersistedSessions() {
-  try {
-    getLocalStorage()?.removeItem(LEGACY_REFRESH_STORAGE_KEY)
-    getSessionStorage()?.removeItem(LEGACY_TAB_STORAGE_KEY)
-  } catch {
-    // Storage can be unavailable under restrictive browser privacy settings.
-  }
-}
-
 function clearPersistedAuthSession() {
   try {
     getLocalStorage()?.removeItem(AUTH_SESSION_STORAGE_KEY)
-    clearLegacyPersistedSessions()
   } catch {
     // Storage can be unavailable under restrictive browser privacy settings.
   }
@@ -88,7 +56,6 @@ function persistAuthSession(tokens: AuthTokens) {
   }
   try {
     storage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(value))
-    clearLegacyPersistedSessions()
   } catch {
     // The in-memory session remains usable when persistence is unavailable.
   }
@@ -102,6 +69,7 @@ function parseAuthSession(value: string | null): AuthTokens | null {
     if (
       parsed.version === AUTH_SESSION_STORAGE_VERSION &&
       typeof parsed.accessToken === 'string' &&
+      parsed.accessToken.length > 0 &&
       typeof parsed.accessExpiresAt === 'number' &&
       Number.isFinite(parsed.accessExpiresAt) &&
       parsed.accessExpiresAt >= 0 &&
@@ -125,59 +93,12 @@ function parseAuthSession(value: string | null): AuthTokens | null {
   return null
 }
 
-function parseRefreshSession(value: string | null, version: number) {
-  if (!value) return null
-
-  try {
-    const parsed = JSON.parse(value) as Partial<PersistedRefreshSession>
-    if (
-      parsed.version === version &&
-      typeof parsed.refreshToken === 'string' &&
-      parsed.refreshToken.length > 0 &&
-      typeof parsed.refreshExpiresAt === 'number' &&
-      Number.isFinite(parsed.refreshExpiresAt) &&
-      parsed.refreshExpiresAt > Date.now()
-    ) {
-      return {
-        ...EMPTY_TOKENS,
-        refreshToken: parsed.refreshToken,
-        refreshExpiresAt: parsed.refreshExpiresAt,
-      }
-    }
-  } catch {
-    // Invalid persisted state is cleared by the caller.
-  }
-
-  return null
-}
-
 function readPersistedAuthSession(): AuthTokens {
   try {
     const persistedSession = parseAuthSession(
       getLocalStorage()?.getItem(AUTH_SESSION_STORAGE_KEY) ?? null
     )
-    if (persistedSession) {
-      clearLegacyPersistedSessions()
-      return persistedSession
-    }
-
-    const legacyRefreshSession = parseRefreshSession(
-      getLocalStorage()?.getItem(LEGACY_REFRESH_STORAGE_KEY) ?? null,
-      LEGACY_REFRESH_STORAGE_VERSION
-    )
-    if (legacyRefreshSession) {
-      persistAuthSession(legacyRefreshSession)
-      return legacyRefreshSession
-    }
-
-    const legacyTabSession = parseRefreshSession(
-      getSessionStorage()?.getItem(LEGACY_TAB_STORAGE_KEY) ?? null,
-      LEGACY_TAB_STORAGE_VERSION
-    )
-    if (legacyTabSession) {
-      persistAuthSession(legacyTabSession)
-      return legacyTabSession
-    }
+    if (persistedSession) return persistedSession
   } catch {
     return EMPTY_TOKENS
   }
@@ -224,7 +145,6 @@ export function isPersistedAuthSessionCurrent(refreshToken: string) {
 
 export function createAuthStore() {
   return create<AuthState>()((set) => {
-    removeCookie(LEGACY_AUTH_SESSION_COOKIE)
     const persistedSession = readPersistedAuthSession()
 
     const clearSession = (isSessionExpired: boolean) =>

@@ -74,29 +74,4 @@ describe('handleServerError', () => {
 
     expect(toastError).toHaveBeenCalledWith('Something went wrong!')
   })
-
-  it('logs the error to the console in development', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    const err = new Error('logged')
-
-    handleServerError(err)
-
-    expect(log).toHaveBeenCalledTimes(1)
-    expect(log).toHaveBeenCalledWith(err)
-
-    log.mockRestore()
-  })
-
-  it('does not log the error to the console in production', () => {
-    vi.stubEnv('DEV', false)
-
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    const err = new Error('not logged')
-
-    handleServerError(err)
-
-    expect(log).not.toHaveBeenCalled()
-
-    log.mockRestore()
-  })
 })

@@ -139,4 +139,24 @@ describe('UserAuthForm', () => {
       })
     )
   })
+
+  it.each(['https://example.com/phishing', '//example.com/phishing', '///'])(
+    'ignores unsafe redirect %s',
+    async (redirectTo) => {
+      vi.clearAllMocks()
+      createSessionMock.mockResolvedValue(tokens)
+
+      const { getByRole, getByLabelText } = await render(
+        <UserAuthForm redirectTo={redirectTo} />
+      )
+
+      await userEvent.fill(getByRole('textbox', { name: /Email/i }), 'a@b.com')
+      await userEvent.fill(getByLabelText('Password'), '1234567')
+      await userEvent.click(getByRole('button', { name: /Sign in/i }))
+
+      await vi.waitFor(() =>
+        expect(navigate).toHaveBeenCalledWith({ to: '/', replace: true })
+      )
+    }
+  )
 })

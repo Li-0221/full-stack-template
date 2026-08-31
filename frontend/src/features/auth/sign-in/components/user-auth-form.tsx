@@ -35,6 +35,20 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
   redirectTo?: string
 }
 
+function getSafeRedirectPath(redirectTo: string | undefined) {
+  if (!redirectTo?.startsWith('/')) return '/'
+
+  try {
+    const applicationOrigin = 'http://app.local'
+    const target = new URL(redirectTo, applicationOrigin)
+    return target.origin === applicationOrigin
+      ? `${target.pathname}${target.search}${target.hash}`
+      : '/'
+  } catch {
+    return '/'
+  }
+}
+
 export function UserAuthForm({
   className,
   redirectTo,
@@ -59,7 +73,7 @@ export function UserAuthForm({
       auth.establishSession(tokens)
       toast.success(`Welcome back, ${data.email}!`)
 
-      const targetPath = redirectTo || '/'
+      const targetPath = getSafeRedirectPath(redirectTo)
       await navigate({ to: targetPath, replace: true })
     } catch (error) {
       handleServerError(error)

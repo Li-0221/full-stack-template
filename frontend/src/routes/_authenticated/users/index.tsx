@@ -1,11 +1,8 @@
-import z from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
+import { paginationSearchSchema } from '@/components/data-table'
 import { Users } from '@/features/users'
 
-const usersSearchSchema = z.object({
-  page: z.number().int().min(1).max(10_000).optional().catch(1),
-  pageSize: z.number().int().min(1).max(100).optional().catch(20),
-})
+const usersSearchSchema = paginationSearchSchema.partial()
 
 export const Route = createFileRoute('/_authenticated/users/')({
   validateSearch: usersSearchSchema,

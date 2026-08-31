@@ -10,11 +10,6 @@ function getApiMessage(value: unknown) {
 }
 
 export function handleServerError(error: unknown) {
-  if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
-    console.log(error)
-  }
-
   let errMsg = 'Something went wrong!'
 
   if (

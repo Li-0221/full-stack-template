@@ -2,19 +2,19 @@ import {
   AxiosError,
   AxiosHeaders,
   type AxiosAdapter,
+  type AxiosRequestConfig,
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from 'axios'
-import type { AuthTokens } from '@/types/api'
+import type { ApiResponse, AuthTokens } from '@/types/api'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth-store'
 import {
   ApiError,
-  ApiResponseError,
   StaleAuthSessionError,
-  authenticatedFetch,
+  apiClient,
   configureTokenRefresh,
-  request,
+  publicApiClient,
 } from './api-client'
 
 const AUTH_STORAGE_KEY = 'full_stack_admin_session_v3'
@@ -67,7 +67,14 @@ function createDeferred<TValue>() {
   return { promise, resolve }
 }
 
-describe('request', () => {
+async function sendAuthenticatedRequest<TData = unknown>(
+  config: AxiosRequestConfig
+) {
+  const response = await apiClient.request<ApiResponse<TData>>(config)
+  return response.data.data
+}
+
+describe('apiClient', () => {
   beforeEach(() => {
     sessionStorage.clear()
     localStorage.clear()
@@ -84,35 +91,64 @@ describe('request', () => {
       })
 
     await expect(
-      request<{ id: string }>({ url: '/items/1', adapter })
+      sendAuthenticatedRequest<{ id: string }>({ url: '/items/1', adapter })
     ).resolves.toEqual({ id: 'item-1' })
   })
 
-  it('throws ApiError when the HTTP request succeeds with a non-zero code', async () => {
+  it('throws ApiError when a successful HTTP response has a non-zero code', async () => {
     const adapter: AxiosAdapter = async (config) =>
       createResponse(config, {
         code: 1001,
-        data: { field: 'name' },
-        message: 'Validation failed',
+        data: null,
+        message: 'Request failed',
       })
 
-    const promise = request({ url: '/items', adapter })
-
-    await expect(promise).rejects.toMatchObject({
+    await expect(
+      sendAuthenticatedRequest({ url: '/items/1', adapter })
+    ).rejects.toMatchObject({
       name: 'ApiError',
       code: 1001,
-      data: { field: 'name' },
-      message: 'Validation failed',
+      data: null,
+      message: 'Request failed',
     })
   })
 
-  it('rejects responses that do not match the common envelope', async () => {
+  it('applies business error validation to the public generated client', async () => {
     const adapter: AxiosAdapter = async (config) =>
-      createResponse(config, { id: 'item-1' })
+      createResponse(config, {
+        code: 1002,
+        data: null,
+        message: 'Invalid credentials',
+      })
 
-    await expect(request({ url: '/items/1', adapter })).rejects.toBeInstanceOf(
-      ApiResponseError
-    )
+    await expect(
+      publicApiClient.request<ApiResponse<unknown>>({
+        url: '/auth/login',
+        adapter,
+      })
+    ).rejects.toMatchObject({
+      name: 'ApiError',
+      code: 1002,
+      data: null,
+      message: 'Invalid credentials',
+    })
+  })
+
+  it('allows the standard OAuth2 token response without an envelope', async () => {
+    const tokenResponse = {
+      access_token: 'access-token',
+      token_type: 'bearer',
+      expires_in: 900,
+    }
+    const adapter: AxiosAdapter = async (config) =>
+      createResponse(config, tokenResponse)
+
+    await expect(
+      publicApiClient.request({
+        url: '/auth/login/access-token',
+        adapter,
+      })
+    ).resolves.toMatchObject({ data: tokenResponse })
   })
 
   it('adds the current access token as a bearer header', async () => {
@@ -124,7 +160,7 @@ describe('request', () => {
       return createResponse(config, { code: 0, data: {}, message: 'success' })
     })
 
-    await request({ url: '/items', adapter })
+    await sendAuthenticatedRequest({ url: '/items', adapter })
 
     expect(adapter).toHaveBeenCalledOnce()
   })
@@ -145,26 +181,9 @@ describe('request', () => {
       return createResponse(config, { code: 0, data: {}, message: 'success' })
     })
 
-    await request({ url: '/items', adapter })
+    await sendAuthenticatedRequest({ url: '/items', adapter })
 
     expect(adapter).toHaveBeenCalledOnce()
-  })
-
-  it('can explicitly skip the bearer header for public auth requests', async () => {
-    useAuthStore
-      .getState()
-      .auth.establishSession(authTokens('access-token', 'refresh-token'))
-    const adapter: AxiosAdapter = async (config) => {
-      expect(config.headers.get('Authorization')).toBeUndefined()
-      return createResponse(config, { code: 0, data: {}, message: 'success' })
-    }
-
-    await request({
-      url: '/auth/refresh',
-      adapter,
-      skipAuth: true,
-      skipAuthRefresh: true,
-    })
   })
 
   it('refreshes once and retries a request with the new access token', async () => {
@@ -191,7 +210,10 @@ describe('request', () => {
     }
 
     await expect(
-      request<{ recovered: boolean }>({ url: '/protected', adapter })
+      sendAuthenticatedRequest<{ recovered: boolean }>({
+        url: '/protected',
+        adapter,
+      })
     ).resolves.toEqual({ recovered: true })
     expect(refresh).toHaveBeenCalledOnce()
     expect(refresh).toHaveBeenCalledWith('current-refresh')
@@ -231,7 +253,7 @@ describe('request', () => {
       return createResponse(config, { code: 0, data: {}, message: 'success' })
     }
 
-    await request({ url: '/protected', adapter })
+    await sendAuthenticatedRequest({ url: '/protected', adapter })
 
     expect(refresh).toHaveBeenCalledOnce()
     expect(refresh).toHaveBeenCalledWith('shared-refresh')
@@ -266,7 +288,10 @@ describe('request', () => {
     }
 
     await expect(
-      request<{ recovered: boolean }>({ url: '/protected', adapter })
+      sendAuthenticatedRequest<{ recovered: boolean }>({
+        url: '/protected',
+        adapter,
+      })
     ).resolves.toEqual({ recovered: true })
     expect(refresh).toHaveBeenCalledOnce()
   })
@@ -297,8 +322,14 @@ describe('request', () => {
     }
 
     const requests = Promise.all([
-      request<{ recovered: boolean }>({ url: '/protected/1', adapter }),
-      request<{ recovered: boolean }>({ url: '/protected/2', adapter }),
+      sendAuthenticatedRequest<{ recovered: boolean }>({
+        url: '/protected/1',
+        adapter,
+      }),
+      sendAuthenticatedRequest<{ recovered: boolean }>({
+        url: '/protected/2',
+        adapter,
+      }),
     ])
 
     await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
@@ -325,7 +356,10 @@ describe('request', () => {
         message: 'Access token expired',
       })
 
-    const protectedRequest = request({ url: '/protected', adapter })
+    const protectedRequest = sendAuthenticatedRequest({
+      url: '/protected',
+      adapter,
+    })
     await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
     localStorage.removeItem(AUTH_STORAGE_KEY)
     refreshAttempt.resolve(authTokens('late-access', 'current-refresh'))
@@ -369,12 +403,12 @@ describe('request', () => {
       })
     }
 
-    const slowRequest = request<{ recovered: boolean }>({
+    const slowRequest = sendAuthenticatedRequest<{ recovered: boolean }>({
       url: '/protected/slow',
       adapter,
     })
     await expect(
-      request<{ recovered: boolean }>({
+      sendAuthenticatedRequest<{ recovered: boolean }>({
         url: '/protected/fast',
         adapter,
       })
@@ -394,7 +428,7 @@ describe('request', () => {
     }
 
     await expect(
-      request({ url: '/protected', adapter })
+      sendAuthenticatedRequest({ url: '/protected', adapter })
     ).rejects.toBeInstanceOf(ApiError)
     expect(useAuthStore.getState().auth).toMatchObject({
       accessToken: '',
@@ -412,9 +446,9 @@ describe('request', () => {
       throw unauthorized(config)
     }
 
-    await expect(request({ url: '/protected', adapter })).rejects.toThrow(
-      'Network error'
-    )
+    await expect(
+      sendAuthenticatedRequest({ url: '/protected', adapter })
+    ).rejects.toThrow('Network error')
     expect(useAuthStore.getState().auth).toMatchObject({
       accessToken: 'expired-access',
       refreshToken: 'current-refresh',
@@ -438,7 +472,10 @@ describe('request', () => {
       await oldResponse.promise
       throw unauthorized(config)
     })
-    const requestFromOldSession = request({ url: '/protected', adapter })
+    const requestFromOldSession = sendAuthenticatedRequest({
+      url: '/protected',
+      adapter,
+    })
 
     await requestStarted.promise
     useAuthStore
@@ -476,7 +513,10 @@ describe('request', () => {
       }
       return createResponse(config, { code: 0, data: {}, message: 'success' })
     })
-    const requestFromOldSession = request({ url: '/protected', adapter })
+    const requestFromOldSession = sendAuthenticatedRequest({
+      url: '/protected',
+      adapter,
+    })
 
     await requestStarted.promise
     localStorage.setItem(
@@ -492,75 +532,6 @@ describe('request', () => {
       StaleAuthSessionError
     )
     expect(adapter).toHaveBeenCalledOnce()
-    expect(refresh).not.toHaveBeenCalled()
-  })
-})
-
-describe('authenticatedFetch', () => {
-  beforeEach(() => {
-    sessionStorage.clear()
-    localStorage.clear()
-    useAuthStore.getState().auth.reset()
-    configureTokenRefresh(null)
-    vi.restoreAllMocks()
-  })
-
-  it('refreshes a custom 40111 response and retries with the new access token', async () => {
-    useAuthStore
-      .getState()
-      .auth.establishSession(authTokens('expired-access', 'current-refresh'))
-    const refresh = vi.fn(async () =>
-      authTokens('new-access', 'current-refresh')
-    )
-    configureTokenRefresh(refresh)
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        Response.json(
-          { code: 40111, data: {}, message: 'Access token expired' },
-          { status: 200 }
-        )
-      )
-      .mockResolvedValueOnce(new Response('stream', { status: 200 }))
-
-    await expect(authenticatedFetch('/stream')).resolves.toMatchObject({
-      status: 200,
-    })
-
-    expect(refresh).toHaveBeenCalledOnce()
-    expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(
-      new Headers(fetchMock.mock.calls[0]?.[1]?.headers).get('Authorization')
-    ).toBe('Bearer expired-access')
-    expect(
-      new Headers(fetchMock.mock.calls[1]?.[1]?.headers).get('Authorization')
-    ).toBe('Bearer new-access')
-  })
-
-  it('never replays a delayed 401 after another session is established', async () => {
-    useAuthStore
-      .getState()
-      .auth.establishSession(authTokens('old-access', 'old-refresh'))
-    const oldResponse = createDeferred<Response>()
-    const refresh = vi.fn(async () =>
-      authTokens('unused-access', 'unused-refresh')
-    )
-    configureTokenRefresh(refresh)
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockImplementationOnce(() => oldResponse.promise)
-
-    const requestFromOldSession = authenticatedFetch('/stream')
-    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
-    useAuthStore
-      .getState()
-      .auth.establishSession(authTokens('new-access', 'new-refresh'))
-    oldResponse.resolve(new Response(null, { status: 401 }))
-
-    await expect(requestFromOldSession).rejects.toBeInstanceOf(
-      StaleAuthSessionError
-    )
-    expect(fetchMock).toHaveBeenCalledOnce()
     expect(refresh).not.toHaveBeenCalled()
   })
 })
