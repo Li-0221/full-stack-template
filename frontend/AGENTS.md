@@ -15,7 +15,8 @@
 - 共享 Axios 客户端统一处理 Bearer token、非零业务码、HTTP 错误和 single-flight refresh；不要新增通用 `request()`、原始 Axios 实例或业务 `fetch` wrapper。
 - 服务端数据用 TanStack Query；query key 包含所有影响结果的参数，mutation 成功后精确更新或失效缓存。不要用 Zustand 保存服务端列表。
 - 认证状态只由 `src/stores/auth-store.ts` 持有。页面和 Query Hook 不重复实现 token 刷新；登录 redirect 只能指向站内路径。
-- 除非需求明确公开，新业务页面放在 `src/routes/_authenticated`。前端门禁只判断 session 是否存在，token 有效性由后端和请求层决定。
+- 除非需求明确公开，新业务页面放在 `src/routes/_authenticated`。`/_authenticated` 的认证门禁只判断 session 是否存在，token 有效性由后端和请求层决定。
+- 已确认的页面权限规则集中在 `src/lib/router-access.ts`，由 Sidebar 和受限父路由共同消费；当前 Users 只允许 `isSuperuser` 用户。前端门禁只改善可见性和导航体验，后端仍负责最终权限校验。
 - 没有后端权限契约时，不自行推断 RBAC、菜单权限或按钮权限。
 - Zod 用于表单、URL、浏览器持久化和外部未类型化数据；同仓库生成的响应类型不再手写一套 schema。
 - 分页统一使用 `page`、`pageSize`、`items` 和 `total`。请求失败必须显示错误和恢复入口，不能伪装为空数据。
