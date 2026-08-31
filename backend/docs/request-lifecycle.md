@@ -103,7 +103,6 @@ React / 浏览器
 
 ## 接口差异
 
-- 公开注册不解析 `CurrentUser`，其余写入链路相同。
 - OAuth2 登录接收 form data，并返回标准 `access_token`、`token_type`、`expires_in`，不使用普通 `ApiResponse` envelope。
 - `204 No Content` 直接返回空 `Response`，不经过 Data 转换或 JSON envelope。
 - 读取接口没有写事务；Service 仍拥有短 Session 的创建和关闭。

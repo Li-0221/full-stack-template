@@ -4,12 +4,17 @@
 
 ## 已包含页面
 
-- Dashboard 示例
-- Users 增删改查示例
-- Tasks 表格示例
-- 个人资料、账户、外观、通知和显示设置
-- 登录、注册、忘记密码、OTP 和备用登录布局
-- 401、403、404、500 和 503 系统页面
+- Dashboard 指标与图表示例
+- Users 真实服务端分页和增删改查
+- Profile 真实姓名与邮箱编辑
+- Security 真实密码修改
+- Appearance 主题设置
+- Display 侧边栏本地偏好
+- Sign in 登录页
+- 401、403、404、500 和 503 公开错误页
+
+模板不提供公开注册。账号由管理员在 Users 页面创建；密码重置需要完整的邮件流程，
+当前也不开放对应页面。
 
 ## 技术栈
 
@@ -45,7 +50,7 @@ pnpm dev
 `public/env-config.js` 中声明的所有配置；任何配置缺失或为空时，容器都会在
 启动 Nginx 前退出。
 
-提交改动前，根据改动范围运行相应检查：
+提交改动前，根据改动范围选择相应检查，不要求每次机械运行全部命令：
 
 ```bash
 pnpm lint
@@ -79,71 +84,63 @@ docker run --rm -p 3000:3000 \
 
 ## API 与认证
 
-所有 API 接口都使用数字 `code`，其中 `0` 表示成功。共享请求工具会校验响应
-envelope，并直接返回其中的 `data`。
+后端 OpenAPI 是接口契约的唯一来源。运行 `make generate-client` 会更新
+`openapi.json` 和 `src/client`；功能数据层直接调用生成的 Service 和类型，不手写重复的
+响应 schema。Zod 继续用于表单、URL、浏览器持久化数据和其他未类型化边界。
 
 ```ts
-import { request } from '@/lib/api-client'
-import type { PageData, PageParams } from '@/types/api'
+import { UsersService, type UserCreateRequest } from '@/client'
+import { generatedApiClient } from '@/lib/generated-api'
 
-const params: PageParams = { page: 1, pageSize: 20 }
-const products = await request<PageData<Product>>({
-  method: 'get',
-  url: '/products',
-  params,
-})
-```
-
-认证 Store 持久化一个 access token 和一个 refresh token。应用初始化时只注册
-一次产品的真实刷新接口：
-
-```ts
-import {
-  configureTokenRefresh,
-  request,
-} from '@/lib/api-client'
-import type { AuthTokens } from '@/types/api'
-
-configureTokenRefresh((refreshToken) =>
-  request<AuthTokens>({
-    method: 'post',
-    url: '/replace-with-the-product-refresh-endpoint',
-    data: { refreshToken },
-    skipAuth: true,
-    skipAuthRefresh: true,
+export async function createUser(request: UserCreateRequest) {
+  const response = await UsersService.createUser({
+    client: generatedApiClient,
+    body: request,
   })
-)
+  return response.data.data
+}
 ```
 
-登录和刷新使用基于本仓库后端 OpenAPI 契约生成的客户端。HTTP `401` 和自定义
-业务码 `40111` 会触发 access token 刷新，并将原请求重试一次。
+普通 API 使用 `{ code, data, message }` envelope，只有数字 `code === 0` 表示成功。
+登录、刷新和退出也使用生成客户端。认证 Store 只持久化一份 access token 与 refresh token；
+应用启动时注册真实的 `refreshSession`：
+
+```ts
+import { configureTokenRefresh } from '@/lib/api-client'
+import { refreshSession } from '@/features/auth/data/session'
+
+configureTokenRefresh(refreshSession)
+```
+
+HTTP `401` 和自定义业务码 `40111` 会触发 single-flight access token 刷新，并将原请求
+最多重试一次。refresh token 被后端拒绝时会清理当前 session；临时网络错误会保留 session，
+以便用户重试。
 
 ## 服务端数据表格
 
-`ServerDataTable` 直接消费共享的 `PageData<T>` 契约。它在 URL 中保存 `page`
-和 `pageSize`，具体产品页面仍负责使用 TanStack Query 获取数据。
+`ServerDataTable` 消费共享的 `PageData<T>` 契约。Users 页面用 TanStack Query 获取真实
+服务端数据，并通过路由搜索参数保存 `page` 和 `pageSize`：
 
 ```tsx
-<ServerDataTable
-  pageData={productsQuery.data}
-  columns={columns}
-  search={route.useSearch()}
-  navigate={route.useNavigate()}
-  isLoading={productsQuery.isLoading}
-  isRefreshing={productsQuery.isFetching}
-  error={productsQuery.error}
-  onRetry={() => productsQuery.refetch()}
-  onRefresh={() => productsQuery.refetch()}
+<UsersTable
+  pageData={usersQuery.data}
+  search={search}
+  navigate={navigate}
+  isLoading={usersQuery.isLoading}
+  isRefreshing={usersQuery.isFetching && !usersQuery.isLoading}
+  isPlaceholderData={usersQuery.isPlaceholderData}
+  error={usersQuery.error}
+  onRetry={() => void usersQuery.refetch()}
+  onRefresh={() => void usersQuery.refetch()}
 />
 ```
 
 路由需要额外筛选条件时可以扩展 `paginationSearchSchema`。通用表格不会自行定义
-搜索、筛选或排序字段，这些字段必须作为各产品 API 契约的明确组成部分。
+搜索、筛选或排序字段，这些字段必须作为具体 API 契约的明确组成部分。
 
 ## 品牌配置
 
-应用标识和默认占位账户数据位于 `src/config/app.ts`。基于本模板创建产品仓库时，
-需要替换这些值。
+应用名称和组织占位文案位于 `src/config/app.ts`。基于本模板创建产品仓库时，需要替换这些值。
 
 ## 来源说明
 

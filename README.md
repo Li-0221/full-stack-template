@@ -10,6 +10,7 @@
 - access token 与可轮换 refresh session，包含重放保护和幂等退出
 - 前端 single-flight token refresh，失败后清理本地 session
 - 真实用户列表、新建、完整编辑和删除流程
+- 真实当前用户资料与密码修改，不提供公开注册
 - 后端 OpenAPI -> `@hey-api/openapi-ts` -> TypeScript SDK
 - OpenAPI 生成的前端请求与响应类型，Zod 用于表单和未类型化数据边界
 - Docker Compose 全栈本地环境
@@ -79,7 +80,7 @@ git diff -- frontend/openapi.json frontend/src/client
 
 登录、刷新和退出请求使用生成 SDK。refresh token 是不透明随机值，后端只保存 SHA-256 hash；每次刷新都会轮换 token，旧 token 重放会撤销对应用户的 refresh sessions。修改密码也会撤销 refresh sessions。
 
-前端只在认证 store 中保存一份 token session。HTTP `401` 或自定义过期码 `40111` 会触发一次共享刷新请求，原请求最多重试一次。刷新失败或 session 已变化时不会保留半登录状态。
+前端只在认证 store 中保存一份 token session。HTTP `401` 或自定义过期码 `40111` 会触发一次共享刷新请求，原请求最多重试一次。refresh token 被后端拒绝时会清理 session；临时网络错误会保留 session 供重试，已变化的旧 session 不会被恢复。
 
 ## 本地开发
 
