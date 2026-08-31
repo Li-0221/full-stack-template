@@ -25,21 +25,6 @@ class UserService:
     def __init__(self, *, manager: DatabaseSessionManager) -> None:
         self.manager = manager
 
-    def register_user(
-        self,
-        *,
-        email: str,
-        full_name: str | None,
-        password: str,
-    ) -> UserData:
-        return self.create_user(
-            email=email,
-            full_name=full_name,
-            password=password,
-            is_active=True,
-            is_superuser=False,
-        )
-
     def create_user(
         self,
         *,

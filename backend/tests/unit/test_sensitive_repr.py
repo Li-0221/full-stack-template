@@ -2,7 +2,7 @@ import secrets
 
 from app.repositories.user import UserRecordCreate
 from app.schemas.auth import AccessTokenResponse
-from app.schemas.user import UserPasswordChangeRequest, UserRegisterRequest
+from app.schemas.user import UserCreateRequest, UserPasswordChangeRequest
 from app.services.auth import AccessTokenResult
 
 
@@ -10,7 +10,7 @@ def test_sensitive_values_do_not_appear_in_contract_reprs() -> None:
     sensitive_value = secrets.token_urlsafe(24)
     representations = (
         repr(
-            UserRegisterRequest(
+            UserCreateRequest(
                 email="repr-check@example.com",
                 password=sensitive_value,
             )

@@ -115,6 +115,25 @@ def test_admin_user_crud_and_pagination(
     assert client.get(f"/api/v1/users/{user_id}", headers=headers).status_code == 404
 
 
+def test_create_user_rejects_python_field_names(
+    client: TestClient,
+    admin_account: AccountFixture,
+) -> None:
+    response = client.post(
+        "/api/v1/users",
+        headers=login_headers(client, admin_account),
+        json={
+            "email": "snake-case@example.com",
+            "full_name": "Not part of the wire contract",
+            "password": secrets.token_urlsafe(24),
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == 10009
+    assert response.json()["data"] is None
+
+
 def test_put_rejects_null_for_non_nullable_field(
     client: TestClient,
     admin_account: AccountFixture,

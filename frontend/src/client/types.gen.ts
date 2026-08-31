@@ -301,24 +301,6 @@ export type UserPutRequest = {
 }
 
 /**
- * UserRegisterRequest
- */
-export type UserRegisterRequest = {
-  /**
-   * Email
-   */
-  email: string
-  /**
-   * Fullname
-   */
-  fullName?: string | null
-  /**
-   * Password
-   */
-  password: string
-}
-
-/**
  * UserSelfPutRequest
  */
 export type UserSelfPutRequest = {
@@ -457,33 +439,6 @@ export type authenticationLogoutSessionResponses = {
 
 export type authenticationLogoutSessionResponse =
   authenticationLogoutSessionResponses[keyof authenticationLogoutSessionResponses]
-
-export type authenticationRegisterUserData = {
-  body: UserRegisterRequest
-  path?: never
-  query?: never
-  url: '/api/v1/auth/register'
-}
-
-export type authenticationRegisterUserErrors = {
-  /**
-   * Validation Error
-   */
-  422: HTTPValidationError
-}
-
-export type authenticationRegisterUserError =
-  authenticationRegisterUserErrors[keyof authenticationRegisterUserErrors]
-
-export type authenticationRegisterUserResponses = {
-  /**
-   * Successful Response
-   */
-  201: ApiResponse_UserData_
-}
-
-export type authenticationRegisterUserResponse =
-  authenticationRegisterUserResponses[keyof authenticationRegisterUserResponses]
 
 export type authenticationLoginAccessTokenData = {
   body: Body_authentication_login_access_token

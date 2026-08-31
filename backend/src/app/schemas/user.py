@@ -14,12 +14,6 @@ SensitivePasswordField = Annotated[PasswordField, Field(repr=False)]
 OptionalPasswordField = Annotated[PasswordField | None, Field(repr=False)]
 
 
-class UserRegisterRequest(RequestModel):
-    email: EmailField
-    full_name: NameField = None
-    password: SensitivePasswordField
-
-
 class UserCreateRequest(RequestModel):
     email: EmailField
     full_name: NameField = None

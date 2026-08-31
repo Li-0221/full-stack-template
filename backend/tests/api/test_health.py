@@ -48,6 +48,7 @@ def test_openapi_matches_put_and_path_runtime_contract(client: TestClient) -> No
     assert schema["paths"]["/api/v1/auth/session"]["post"]["operationId"] == (
         "authentication-create_session"
     )
+    assert "/api/v1/auth/register" not in schema["paths"]
     assert schema["paths"]["/api/v1/users"]["get"]["operationId"] == ("users-list_users")
     assert "delete" not in schema["paths"]["/api/v1/users/me"]
 

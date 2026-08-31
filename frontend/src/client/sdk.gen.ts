@@ -19,9 +19,6 @@ import type {
   authenticationRefreshSessionData,
   authenticationRefreshSessionErrors,
   authenticationRefreshSessionResponses,
-  authenticationRegisterUserData,
-  authenticationRegisterUserErrors,
-  authenticationRegisterUserResponses,
   healthHealthCheckData,
   healthHealthCheckResponses,
   usersChangeCurrentUserPasswordData,
@@ -141,27 +138,6 @@ export class AuthenticationService {
       ThrowOnError
     >({
       url: '/api/v1/auth/session/logout',
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    })
-  }
-
-  /**
-   * Register User
-   */
-  public static registerUser<ThrowOnError extends boolean = true>(
-    options: Options<authenticationRegisterUserData, ThrowOnError>
-  ) {
-    return (options.client ?? client).post<
-      authenticationRegisterUserResponses,
-      authenticationRegisterUserErrors,
-      ThrowOnError
-    >({
-      responseType: 'json',
-      url: '/api/v1/auth/register',
       ...options,
       headers: {
         'Content-Type': 'application/json',

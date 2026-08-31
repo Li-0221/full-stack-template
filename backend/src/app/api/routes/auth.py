@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.dependencies.auth import AuthServiceDep
-from app.dependencies.user import UserServiceDep
 from app.schemas.auth import (
     AccessTokenResponse,
     AuthTokensData,
@@ -12,7 +11,6 @@ from app.schemas.auth import (
     SessionRefreshRequest,
 )
 from app.schemas.common import ApiResponse
-from app.schemas.user import UserData, UserRegisterRequest
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -41,19 +39,6 @@ def logout_session(
     service: AuthServiceDep,
 ) -> None:
     service.revoke_session(refresh_token=request.refresh_token)
-
-
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-def register_user(
-    request: UserRegisterRequest,
-    service: UserServiceDep,
-) -> ApiResponse[UserData]:
-    user = service.register_user(
-        email=str(request.email),
-        full_name=request.full_name,
-        password=request.password,
-    )
-    return ApiResponse(data=user)
 
 
 @router.post("/login/access-token")
