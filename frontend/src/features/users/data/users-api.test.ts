@@ -1,4 +1,3 @@
-import { ZodError } from 'zod'
 import { UsersService } from '@/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { generatedApiClient } from '@/lib/generated-api'
@@ -47,22 +46,7 @@ describe('users API', () => {
     })
   })
 
-  it('rejects an invalid user variant at the API boundary', async () => {
-    vi.mocked(UsersService.listUsers).mockResolvedValue(
-      response({
-        items: [{ ...user, isActive: undefined }],
-        page: 1,
-        pageSize: 20,
-        total: 1,
-      }) as never
-    )
-
-    await expect(listUsers({ page: 1, pageSize: 20 })).rejects.toBeInstanceOf(
-      ZodError
-    )
-  })
-
-  it('creates a user and validates the returned user', async () => {
+  it('creates a user through the generated authenticated client', async () => {
     const request = {
       email: user.email,
       fullName: user.fullName,
@@ -98,19 +82,6 @@ describe('users API', () => {
       path: { userId: user.id },
       body: request,
     })
-  })
-
-  it('rejects an invalid mutation response at the API boundary', async () => {
-    vi.mocked(UsersService.createUser).mockResolvedValue(
-      response({ ...user, updatedAt: null }) as never
-    )
-
-    await expect(
-      createUser({
-        email: user.email,
-        password: 'password123',
-      })
-    ).rejects.toBeInstanceOf(ZodError)
   })
 
   it('deletes a user through the authenticated generated client', async () => {

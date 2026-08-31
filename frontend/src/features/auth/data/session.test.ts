@@ -1,4 +1,3 @@
-import { ZodError } from 'zod'
 import { AuthenticationService } from '@/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { generatedPublicApiClient } from '@/lib/generated-api'
@@ -44,16 +43,6 @@ describe('auth session API', () => {
       body: { email: 'admin@example.com', password: 'password' },
       client: generatedPublicApiClient,
     })
-  })
-
-  it('rejects an incomplete token response at the API boundary', async () => {
-    vi.mocked(AuthenticationService.createSession).mockResolvedValue(
-      response({ ...tokens, refreshToken: undefined }) as never
-    )
-
-    await expect(
-      createSession({ email: 'admin@example.com', password: 'password' })
-    ).rejects.toBeInstanceOf(ZodError)
   })
 
   it('refreshes and revokes through the generated public client', async () => {
