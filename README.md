@@ -8,7 +8,7 @@
 - Router -> Service -> Repository 的清晰后端分层
 - React 19、Vite、TanStack Router、TanStack Query 和 shadcn/ui
 - access token 与可轮换 refresh session，包含重放保护和幂等退出
-- 前端 single-flight token refresh，失败后清理本地 session
+- 前端 single-flight token refresh，refresh token 失效后清理本地 session
 - 真实用户列表、新建、完整编辑和删除流程
 - 真实当前用户资料与密码修改，不提供公开注册
 - 后端 OpenAPI -> `@hey-api/openapi-ts` -> TypeScript SDK
