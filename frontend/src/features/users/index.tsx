@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
@@ -5,17 +6,18 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { UsersDialogs } from './components/users-dialogs'
-import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersProvider } from './components/users-provider'
 import { UsersTable } from './components/users-table'
-import { users } from './data/users'
+import { usersQueryOptions } from './data/users-api'
 
 const route = getRouteApi('/_authenticated/users/')
 
 export function Users() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
+  const page = search.page ?? 1
+  const pageSize = search.pageSize ?? 20
+  const usersQuery = useQuery(usersQueryOptions({ page, pageSize }))
 
   return (
     <UsersProvider>
@@ -34,12 +36,19 @@ export function Users() {
               Manage your users and their roles here.
             </p>
           </div>
-          <UsersPrimaryButtons />
         </div>
-        <UsersTable data={users} search={search} navigate={navigate} />
+        <UsersTable
+          pageData={usersQuery.data}
+          search={search}
+          navigate={navigate}
+          isLoading={usersQuery.isLoading}
+          isRefreshing={usersQuery.isFetching && !usersQuery.isLoading}
+          isPlaceholderData={usersQuery.isPlaceholderData}
+          error={usersQuery.error}
+          onRetry={() => void usersQuery.refetch()}
+          onRefresh={() => void usersQuery.refetch()}
+        />
       </Main>
-
-      <UsersDialogs />
     </UsersProvider>
   )
 }

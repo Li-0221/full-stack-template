@@ -193,7 +193,7 @@ publicApiClient.interceptors.response.use(undefined, (error: unknown) =>
   Promise.reject(normalizeRequestError(error))
 )
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: env.apiBaseUrl,
   timeout: 30_000,
 })
