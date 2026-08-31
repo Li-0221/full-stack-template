@@ -21,6 +21,7 @@ type DataTableColumnHeaderProps<TData, TValue> =
     title: string
   }
 
+/** @public Shared sortable and hideable table-column header. */
 export function DataTableColumnHeader<TData, TValue>({
   column,
   title,

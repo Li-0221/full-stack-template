@@ -4,6 +4,7 @@ const config: KnipConfig = {
   entry: [
     'playwright.config.ts',
     'src/components/date-time-picker.tsx',
+    'src/components/select-dropdown.tsx',
     'src/hooks/use-debounced-search.ts',
   ],
   ignore: [

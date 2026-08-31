@@ -17,8 +17,8 @@
 - 本项目是通用 React Admin 模板，具体业务范围和后端契约以当前需求与项目代码为准。
 - 核心技术栈为 React 19、Vite 8、TypeScript、TanStack Router、TanStack Query、TanStack Table、React Hook Form、Zod、Zustand、Tailwind CSS 4、Radix UI 和本地 shadcn/ui。
 - 包管理器固定使用 pnpm；Node.js 和 pnpm 版本要求以 `package.json` 为准。
-- Dashboard、Users 和 Tasks 可以作为当前页面结构与交互参考，但不能作为后端接口、字段、角色或权限契约来源。
-- 认证页、公开错误页、登录后错误预览页和应用壳层是系统基础设施。清理或替换业务页面时不得顺带删除这些页面。
+- Dashboard 是首页与图表布局示例，Users 是真实 CRUD 与服务端表格示例；两者都不能作为其他业务的接口、字段、角色或权限契约来源。
+- 登录页、公开错误页和应用壳层是系统基础设施。未接通后端的认证流程不得以演示页面形式开放。
 - 不得根据目录名、旧仓库代码或界面文案自行推断产品权限、接口路径、业务状态或数据字段。
 
 ## 文件组织
@@ -40,9 +40,8 @@
 - `/_authenticated` 的门禁只检查 access token 是否存在。token 是否有效由后端负责，并由请求层处理 `401` 或自定义 code `40111`。
 - 不要在页面组件内重复实现 token 检查、刷新或登录跳转。
 - 未获得角色/权限契约前，不得创建臆测的 RBAC、菜单权限、按钮权限或前端角色判断。
-- 以下认证页面保持公开：`/sign-in`、`/sign-in-2`、`/sign-up`、`/forgot-password`、`/otp`。
+- 当前公开认证页面只有 `/sign-in`。注册和密码重置必须在后端能力与安全边界完整接通后再开放。
 - 以下系统错误页面保持公开：`/401`、`/403`、`/404`、`/500`、`/503`。
-- `/errors/$error` 是登录后应用壳层内的错误状态预览路由，必须继续受 `/_authenticated` 门禁保护；不要把它与公开数字错误页合并。
 - 登录后的 redirect 只能指向应用内部地址，不能把未经校验的外部 URL 当作跳转目标。
 
 ## 认证边界
@@ -80,7 +79,7 @@
 - 服务端分页列表优先使用 `src/components/data-table/server-table.tsx` 的 `ServerDataTable`。
 - 路由分页校验优先复用或扩展 `paginationSearchSchema`，并保持 `page`、`pageSize` 与 URL 同步。
 - `ServerDataTable` 只封装手动分页、列显示、选择和通用加载状态；产品筛选、搜索和排序字段必须由具体 API 契约定义。
-- 当前仓库没有 `ClientDataTable`。客户端小数据列表参考 Users/Tasks 的 TanStack Table 组合，不得导入不存在的封装。
+- 当前仓库没有 `ClientDataTable`。客户端小数据列表参考 Users 的 TanStack Table 组合，不得导入不存在的封装。
 - 共享表格不能覆盖需求时，先评估扩展现有封装；只有交互模型确实不同，或扩展会破坏通用边界时，才在功能内实现专用表格。
 - 搜索和分面筛选优先复用 `DataTableToolbar`，分页统一使用 `DataTablePagination`；不要在页面中重复实现筛选表单或上一页、下一页区块。
 - 不能因为界面显示筛选、排序、全选或批量操作控件，就假设后端已支持对应行为。

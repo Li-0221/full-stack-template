@@ -20,6 +20,7 @@ type SelectDropdownProps = {
   isControlled?: boolean
 }
 
+/** @public Reusable select field for local and remotely loaded options. */
 export function SelectDropdown({
   defaultValue,
   onValueChange,

@@ -1,6 +1,10 @@
+/** @public Shared pagination controls for client and server tables. */
 export { DataTablePagination } from './pagination'
+/** @public Shared sortable and hideable table-column header. */
 export { DataTableColumnHeader } from './column-header'
+/** @public Shared search, filter, reset, and column-visibility toolbar. */
 export { DataTableToolbar } from './toolbar'
+/** @public Shared keyboard-accessible bulk-actions toolbar. */
 export { DataTableBulkActions } from './bulk-actions'
 /** @public Shared empty-value formatting for table cells. */
 export {

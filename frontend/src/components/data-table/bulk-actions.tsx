@@ -18,6 +18,7 @@ type DataTableBulkActionsProps<TData> = {
 }
 
 /**
+ * @public
  * A modular toolbar for displaying bulk actions when table rows are selected.
  *
  * @template TData The type of data in the table.

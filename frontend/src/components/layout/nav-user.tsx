@@ -18,12 +18,10 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import {
-  BadgeCheck,
-  Bell,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
-  Sparkles,
+  ShieldCheck,
+  UserCog,
 } from '@/components/icons'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 
@@ -89,29 +87,16 @@ export function NavUser({ user }: NavUserProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <Sparkles />
-                  Upgrade to Pro
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <Link to='/settings/account'>
-                    <BadgeCheck />
-                    Account
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to='/settings'>
-                    <CreditCard />
-                    Billing
+                    <UserCog />
+                    Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to='/settings/notifications'>
-                    <Bell />
-                    Notifications
+                  <Link to='/settings/account'>
+                    <ShieldCheck />
+                    Account
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
