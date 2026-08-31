@@ -6,6 +6,8 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { UsersDialogs } from './components/users-dialogs'
+import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersProvider } from './components/users-provider'
 import { UsersTable } from './components/users-table'
 import { usersQueryOptions } from './data/users-api'
@@ -33,9 +35,10 @@ export function Users() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>User List</h2>
             <p className='text-muted-foreground'>
-              Manage your users and their roles here.
+              Manage user accounts and administrator access.
             </p>
           </div>
+          <UsersPrimaryButtons />
         </div>
         <UsersTable
           pageData={usersQuery.data}
@@ -49,6 +52,8 @@ export function Users() {
           onRefresh={() => void usersQuery.refetch()}
         />
       </Main>
+
+      <UsersDialogs />
     </UsersProvider>
   )
 }

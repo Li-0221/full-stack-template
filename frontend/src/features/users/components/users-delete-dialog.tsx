@@ -1,13 +1,13 @@
-'use client'
-
 import { useState } from 'react'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { handleServerError } from '@/lib/handle-server-error'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { AlertTriangle } from '@/components/icons'
-import { type User } from '../data/schema'
+import { AlertTriangle, Loader2 } from '@/components/icons'
+import { deleteUser, usersQueryKey, type User } from '../data/users-api'
 
 type UserDeleteDialogProps = {
   open: boolean
@@ -20,69 +20,95 @@ export function UsersDeleteDialog({
   onOpenChange,
   currentRow,
 }: UserDeleteDialogProps) {
-  const [value, setValue] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const queryClient = useQueryClient()
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteUser(currentRow.id),
+  })
+  const isConfirmed = confirmation.trim() === currentRow.email
 
-  const handleDelete = () => {
-    if (value.trim() !== currentRow.username) return
+  function handleOpenChange(nextOpen: boolean) {
+    if (deleteMutation.isPending) return
+    if (!nextOpen) setConfirmation('')
+    onOpenChange(nextOpen)
+  }
 
-    onOpenChange(false)
-    showSubmittedData(currentRow, 'The following user has been deleted:')
+  async function handleDelete() {
+    if (!isConfirmed || deleteMutation.isPending) return
+
+    try {
+      await deleteMutation.mutateAsync()
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
+      toast.success('User deleted.')
+      setConfirmation('')
+      onOpenChange(false)
+    } catch (error) {
+      handleServerError(error)
+    }
   }
 
   return (
     <ConfirmDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       form='users-delete-form'
-      disabled={value.trim() !== currentRow.username}
+      disabled={!isConfirmed}
+      isLoading={deleteMutation.isPending}
       title={
         <span className='text-destructive'>
           <AlertTriangle
+            aria-hidden='true'
             className='me-1 inline-block stroke-destructive'
             size={18}
           />{' '}
-          Delete User
+          Delete user
         </span>
       }
       desc={
         <form
           id='users-delete-form'
-          onSubmit={(e) => {
-            e.preventDefault()
-            handleDelete()
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleDelete()
           }}
           className='space-y-4'
         >
-          <p className='mb-2'>
-            Are you sure you want to delete{' '}
-            <span className='font-bold'>{currentRow.username}</span>?
-            <br />
-            This action will permanently remove the user with the role of{' '}
-            <span className='font-bold'>
-              {currentRow.role.toUpperCase()}
+          <p>
+            This permanently deletes{' '}
+            <span className='font-semibold text-foreground'>
+              {currentRow.email}
             </span>{' '}
-            from the system. This cannot be undone.
+            and cannot be undone.
           </p>
 
-          <Label className='my-2'>
-            Username:
+          <Label className='grid gap-2'>
+            Type the email to confirm
             <Input
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder='Enter username to confirm deletion.'
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              placeholder={currentRow.email}
+              autoComplete='off'
               autoFocus
             />
           </Label>
 
           <Alert variant='destructive'>
-            <AlertTitle>Warning!</AlertTitle>
+            <AlertTriangle aria-hidden='true' />
+            <AlertTitle>Permanent action</AlertTitle>
             <AlertDescription>
-              Please be careful, this operation can not be rolled back.
+              Existing sessions and access for this account will be removed.
             </AlertDescription>
           </Alert>
         </form>
       }
-      confirmText='Delete'
+      confirmText={
+        <>
+          {deleteMutation.isPending ? (
+            <Loader2 aria-hidden='true' className='animate-spin' />
+          ) : null}
+          {deleteMutation.isPending ? 'Deleting...' : 'Delete user'}
+        </>
+      }
       destructive
     />
   )

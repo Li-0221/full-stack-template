@@ -3,6 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { LongText } from '@/components/long-text'
 import type { User } from '../data/users-api'
+import { DataTableRowActions } from './data-table-row-actions'
 
 export const usersColumns: ColumnDef<User>[] = [
   {
@@ -54,5 +55,10 @@ export const usersColumns: ColumnDef<User>[] = [
       </span>
     ),
     enableSorting: false,
+  },
+  {
+    id: 'actions',
+    cell: DataTableRowActions,
+    enableHiding: false,
   },
 ]
