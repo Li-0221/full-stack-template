@@ -10,7 +10,7 @@ const { changePasswordMock, navigateMock, resetAuthMock } = vi.hoisted(() => ({
   resetAuthMock: vi.fn(),
 }))
 
-vi.mock('../data/current-user-api', () => ({
+vi.mock('@/features/auth/data/current-user-api', () => ({
   changeCurrentUserPassword: changePasswordMock,
 }))
 

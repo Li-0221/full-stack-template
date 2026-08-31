@@ -19,7 +19,7 @@ import {
   currentUserQueryKey,
   updateCurrentUser,
   type CurrentUser,
-} from '../data/current-user-api'
+} from '@/features/auth/data/current-user-api'
 
 const profileFormSchema = z.object({
   fullName: z.string().max(255, 'Name must not be longer than 255 characters.'),

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { currentUserQueryOptions } from '@/features/auth/data/current-user-api'
 import { ContentSection } from '../components/content-section'
-import { currentUserQueryOptions } from '../data/current-user-api'
 import { ProfileForm } from './profile-form'
 
 export function SettingsProfile() {

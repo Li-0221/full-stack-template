@@ -1,4 +1,5 @@
 import { type LinkProps } from '@tanstack/react-router'
+import type { RouteAccessRule } from '@/lib/router-access'
 
 type Team = {
   name: string
@@ -10,6 +11,7 @@ type BaseNavItem = {
   title: string
   badge?: string
   icon?: React.ElementType
+  access?: RouteAccessRule
 }
 
 type NavLink = BaseNavItem & {

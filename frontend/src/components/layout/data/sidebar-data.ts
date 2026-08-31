@@ -1,9 +1,8 @@
 import { appConfig } from '@/config/app'
 import { Logo } from '@/assets/logo'
+import { routeAccessRules } from '@/lib/router-access'
 import {
   LayoutDashboard,
-  Monitor,
-  Palette,
   Settings,
   Wrench,
   UserCog,
@@ -32,6 +31,7 @@ export const sidebarData: SidebarData = {
           title: 'Users',
           url: '/users',
           icon: Users,
+          access: routeAccessRules.users,
         },
       ],
     },
@@ -51,16 +51,6 @@ export const sidebarData: SidebarData = {
               title: 'Security',
               url: '/settings/security',
               icon: Wrench,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: Palette,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: Monitor,
             },
           ],
         },

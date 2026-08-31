@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/form'
 import { Loader2 } from '@/components/icons'
 import { PasswordInput } from '@/components/password-input'
-import { changeCurrentUserPassword } from '../data/current-user-api'
+import { changeCurrentUserPassword } from '@/features/auth/data/current-user-api'
 
 const passwordSchema = z
   .object({

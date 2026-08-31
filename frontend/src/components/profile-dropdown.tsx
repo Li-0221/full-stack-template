@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SignOutDialog } from '@/components/sign-out-dialog'
-import { currentUserQueryOptions } from '@/features/settings/data/current-user-api'
+import { currentUserQueryOptions } from '@/features/auth/data/current-user-api'
 
 export function ProfileDropdown() {
   const [open, setOpen] = useDialogState()

@@ -8,7 +8,7 @@ const { updateCurrentUserMock } = vi.hoisted(() => ({
   updateCurrentUserMock: vi.fn(),
 }))
 
-vi.mock('../data/current-user-api', () => ({
+vi.mock('@/features/auth/data/current-user-api', () => ({
   currentUserQueryKey: ['current-user'],
   updateCurrentUser: updateCurrentUserMock,
 }))

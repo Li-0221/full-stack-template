@@ -25,7 +25,7 @@ import {
   UserCog,
 } from '@/components/icons'
 import { SignOutDialog } from '@/components/sign-out-dialog'
-import { currentUserQueryOptions } from '@/features/settings/data/current-user-api'
+import { currentUserQueryOptions } from '@/features/auth/data/current-user-api'
 
 export function NavUser() {
   const { isMobile } = useSidebar()
