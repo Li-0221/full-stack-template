@@ -1,7 +1,6 @@
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
 
-# tripguru-ast: ignore[TG-DS001] - SQLAlchemy MetaData owns this mapping protocol
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",

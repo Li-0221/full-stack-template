@@ -10,7 +10,7 @@ DATABASE_URL_DRIVER_ERROR = "database_url must use postgresql+psycopg"
 class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="APP_", extra="ignore")
 
-    name: str = "FastAPI Demo"
+    name: str = "Full Stack Template API"
     api_v1_prefix: str = "/api/v1"
     secret_key: Annotated[SecretStr, Field(min_length=32)]
     # 防止配置为立即失效或意外长期有效的 access token, 最长允许一天。

@@ -78,7 +78,7 @@ async def handle_http_error(
 async def handle_unexpected_error(request: Request, error: Exception) -> JSONResponse:
     logger.exception(
         "unhandled_request_error",
-        extra={  # tripguru-ast: ignore[TG-DS001] - logging extra is a mapping boundary
+        extra={
             "request_id": request.state.request_id,
             "path": request.url.path,
             "error_type": type(error).__name__,

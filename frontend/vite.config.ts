@@ -30,7 +30,7 @@ export default defineConfig(({ command, mode }) => {
     base: command === 'serve' ? appBasePath : './',
     plugins: [
       {
-        name: 'tripguru-runtime-base-path',
+        name: 'full-stack-runtime-base-path',
         transformIndexHtml(html) {
           return {
             html: html.replace(

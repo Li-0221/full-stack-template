@@ -2,9 +2,9 @@ import { clearCookies } from '@/test-utils/cookies'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createAuthStore } from './auth-store'
 
-const LEGACY_STORAGE_KEY = 'tripguru_admin_session_v1'
-const REFRESH_ONLY_STORAGE_KEY = 'tripguru_admin_refresh_session_v2'
-const AUTH_STORAGE_KEY = 'tripguru_admin_session_v3'
+const LEGACY_STORAGE_KEY = 'full_stack_admin_session_v1'
+const REFRESH_ONLY_STORAGE_KEY = 'full_stack_admin_refresh_session_v2'
+const AUTH_STORAGE_KEY = 'full_stack_admin_session_v3'
 const tokens = {
   accessToken: 'access-token',
   accessExpiresAt: Date.now() + 15 * 60 * 1000,
@@ -187,10 +187,10 @@ describe('useAuthStore', () => {
 
   it('removes the legacy JavaScript cookie during migration', () => {
     document.cookie =
-      'tripguru_admin_session={"accessToken":"legacy","refreshToken":"legacy"}; path=/'
+      'full_stack_admin_session={"accessToken":"legacy","refreshToken":"legacy"}; path=/'
 
     createAuthStore()
 
-    expect(document.cookie).not.toContain('tripguru_admin_session=')
+    expect(document.cookie).not.toContain('full_stack_admin_session=')
   })
 })

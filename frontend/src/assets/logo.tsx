@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      id='tripguru-admin-logo'
+      id='full-stack-admin-logo'
       viewBox='0 0 18 18'
       xmlns='http://www.w3.org/2000/svg'
       height='1em'
@@ -13,7 +13,7 @@ export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
       className={cn('size-8 shrink-0 text-primary', className)}
       {...props}
     >
-      <title>TripGuru</title>
+      <title>Full Stack Admin</title>
       <path
         d='M11.2492 6.74952L8.99936 0L6.74952 6.74952L0 8.99936L6.74952 11.2492L8.99936 17.9987L11.2492 11.2492L17.9987 8.99936L11.2492 6.74952ZM2.99979 8.99936L7.49946 7.49946L8.24941 8.99936H2.99979ZM8.99936 14.9989L7.49946 10.4992L8.99936 9.7493V14.9989ZM8.99936 2.99979L10.4992 7.49946L8.99936 8.24941V2.99979ZM10.4992 10.4992L9.7493 8.99936H14.9989L10.4992 10.4992ZM6.52453 12.9741L3.74973 14.249L5.02464 11.4742L6.22456 11.8492L6.52453 12.9741ZM12.9741 11.4742L14.249 14.249L11.4742 12.9741L11.8492 11.7742L12.9741 11.4742ZM5.02464 6.52453L3.74973 3.74973L6.52453 5.02464L6.14956 6.14956L5.02464 6.52453ZM11.4742 5.02464L14.249 3.74973L12.9741 6.52453L11.7742 6.14956L11.4742 5.02464Z'
         fill='currentColor'

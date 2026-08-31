@@ -14,7 +14,7 @@
 
 ## 项目定位
 
-- 本项目是 TripGuru React Admin 管理系统，具体业务范围和后端契约以当前需求与项目代码为准。
+- 本项目是通用 React Admin 模板，具体业务范围和后端契约以当前需求与项目代码为准。
 - 核心技术栈为 React 19、Vite 8、TypeScript、TanStack Router、TanStack Query、TanStack Table、React Hook Form、Zod、Zustand、Tailwind CSS 4、Radix UI 和本地 shadcn/ui。
 - 包管理器固定使用 pnpm；Node.js 和 pnpm 版本要求以 `package.json` 为准。
 - Dashboard、Users 和 Tasks 可以作为当前页面结构与交互参考，但不能作为后端接口、字段、角色或权限契约来源。
@@ -119,7 +119,7 @@
 - 静态 Lucide 图标从 `@/components/icons` 按名称导入；需要新图标时先在该入口增加明确的 named export，不要在业务文件直接导入 `lucide-react`。
 - 通用界面图标在适合项目现有视觉语言时优先使用 Lucide；若现有图标体系、Radix 基础组件内置图标或业务语义使用其他方案更合适，应在项目内保持一致，不为统一而强制迁移或新增依赖。禁止使用 Emoji、颜文字或其他文本符号代替界面图标。品牌 Logo、国旗、支付标识和供应商标识属于语义资产，不视为通用界面图标。没有动态 icon contract 时不要引入 Iconify、字符串图标解析器或第二套图标库。
 - 新按钮能使用熟悉图标表达时使用 Lucide 图标，并给不熟悉的纯图标按钮提供 `aria-label` 和 `title`。
-- TripGuru Logo 的 owner 是 `src/assets/logo.tsx`，品牌文案集中在 `src/config/app.ts`；没有明确品牌变更时不要替换或复制 Logo SVG。
+- 应用 Logo 的 owner 是 `src/assets/logo.tsx`，品牌文案集中在 `src/config/app.ts`；没有明确品牌变更时不要替换或复制 Logo SVG。
 - 保留键盘操作、焦点状态、ARIA 语义和 RTL。可复用布局优先使用 `ms-*`、`me-*`、`ps-*`、`pe-*`、`start-*`、`end-*`、`border-s`、`border-e` 等逻辑方向类。
 - Admin 默认只要求桌面端实现和验收。只有用户明确要求时才增加移动端适配与移动视口验收。
 - 不嵌套装饰性卡片；Dialog、Sheet 等浮层必须有可访问标题、必要说明、焦点管理和键盘关闭行为。

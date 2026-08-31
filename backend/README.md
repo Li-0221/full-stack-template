@@ -1,4 +1,4 @@
-# FastAPI 中小型项目参考模板
+# Full Stack Template 后端
 
 ## 项目定位
 
@@ -29,7 +29,7 @@
 ## 1. 先理解目录
 
 ```text
-fastapi-demo/
+backend/
 ├── alembic/                       # 数据库 schema 的迁移环境与版本历史
 │   ├── versions/                  # Alembic revision 文件
 │   └── env.py                     # Alembic 运行环境和 metadata 装配
@@ -80,7 +80,7 @@ Compose 使用 `.env` 启动数据库，本地 shell 再显式导出同一份配
 `.python-version` 会让 uv 选择 Python 3.12。
 
 ```bash
-cd fastapi-demo
+cd backend
 cp .env.example .env
 # 填写 .env 中的本地隔离配置
 set -a
@@ -106,7 +106,7 @@ uv run uvicorn app.main:app --reload
 需要验证 API 镜像时运行：
 
 ```bash
-docker build -t fastapi-demo .
+docker build -t full-stack-template-backend .
 ```
 
 生产环境应把 migration 作为独立部署步骤，并从 secret manager 注入配置，不要让每个 API

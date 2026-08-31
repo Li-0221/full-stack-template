@@ -2,10 +2,10 @@ import type { AuthTokens } from '@/types/api'
 import { create } from 'zustand'
 import { removeCookie } from '@/lib/cookies'
 
-const AUTH_SESSION_STORAGE_KEY = 'tripguru_admin_session_v3'
-const LEGACY_REFRESH_STORAGE_KEY = 'tripguru_admin_refresh_session_v2'
-const LEGACY_TAB_STORAGE_KEY = 'tripguru_admin_session_v1'
-const LEGACY_AUTH_SESSION_COOKIE = 'tripguru_admin_session'
+const AUTH_SESSION_STORAGE_KEY = 'full_stack_admin_session_v3'
+const LEGACY_REFRESH_STORAGE_KEY = 'full_stack_admin_refresh_session_v2'
+const LEGACY_TAB_STORAGE_KEY = 'full_stack_admin_session_v1'
+const LEGACY_AUTH_SESSION_COOKIE = 'full_stack_admin_session'
 const AUTH_SESSION_STORAGE_VERSION = 3
 const LEGACY_REFRESH_STORAGE_VERSION = 2
 const LEGACY_TAB_STORAGE_VERSION = 1

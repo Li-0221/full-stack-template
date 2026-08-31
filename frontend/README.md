@@ -1,6 +1,6 @@
-# TripGuru React Admin Starter
+# Full Stack Template Frontend
 
-Company starter for React administration applications. It provides a consistent application shell, system pages, CRUD examples, theming, RTL support, and browser-based tests without binding a new project to a product domain.
+React administration frontend for the full-stack template. It provides a consistent application shell, real authentication and user management, theming, RTL support, and browser-based tests without binding the project to a product domain.
 
 ## Included Pages
 
@@ -62,11 +62,11 @@ The production image serves the application with Nginx and exposes `/healthz`.
 The default container port is `3000` and can be changed with `APP_PORT`.
 
 ```bash
-docker build -t tripguru-react-admin-starter .
+docker build -t full-stack-template-frontend .
 docker run --rm -p 3000:3000 \
   -e VITE_API_BASE_URL=https://api.example.com \
   -e VITE_APP_BASE_PATH=/admin \
-  tripguru-react-admin-starter
+  full-stack-template-frontend
 ```
 
 The checked-in `.gitlab-ci.yml` is intentionally fully commented. Enable and
@@ -110,9 +110,9 @@ configureTokenRefresh((refreshToken) =>
 )
 ```
 
-The template intentionally does not assume login or refresh endpoint paths.
-For compatibility with the existing TripGuru admin backend, custom code `40111`
-refreshes the access token and retries once.
+Login and refresh use the generated client from this repository's backend
+OpenAPI contract. HTTP `401` and custom code `40111` refresh the access token
+and retry once.
 
 ## Server Data Tables
 

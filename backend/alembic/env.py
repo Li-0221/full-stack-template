@@ -23,7 +23,6 @@ def run_migrations_offline() -> None:
         url=config.get_main_option("sqlalchemy.url"),
         target_metadata=target_metadata,
         literal_binds=True,
-        # tripguru-ast: ignore[TG-DS001] - Alembic requires dialect options as a mapping
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
     )

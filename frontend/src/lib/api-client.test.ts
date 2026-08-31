@@ -17,7 +17,7 @@ import {
   request,
 } from './api-client'
 
-const AUTH_STORAGE_KEY = 'tripguru_admin_session_v3'
+const AUTH_STORAGE_KEY = 'full_stack_admin_session_v3'
 
 function authTokens(accessToken: string, refreshToken: string): AuthTokens {
   return {
