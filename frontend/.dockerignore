@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+.tanstack
+.vitest-attachments
+
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+.idea
+.vscode

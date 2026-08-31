@@ -1,0 +1,27 @@
+server {
+    listen ${APP_PORT};
+    server_name _;
+
+    absolute_redirect off;
+    port_in_redirect off;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location = ${NGINX_APP_BASE_PATH_NO_SLASH} {
+        return 308 ${NGINX_APP_BASE_PATH}$is_args$args;
+    }
+
+    location = ${NGINX_APP_BASE_PATH}index.html {
+        alias /usr/share/nginx/html/index.html;
+        add_header Cache-Control "no-store";
+    }
+
+    location ${NGINX_APP_BASE_PATH} {
+        alias /usr/share/nginx/html/;
+        try_files $uri $uri/ ${NGINX_APP_BASE_PATH}index.html;
+    }
+}
