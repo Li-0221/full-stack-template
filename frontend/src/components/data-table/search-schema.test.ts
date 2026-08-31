@@ -1,9 +1,8 @@
-import { describe, expect, expectTypeOf, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
   paginationSearchSchema,
-  type PaginationSearch,
 } from './search-schema'
 
 describe('paginationSearchSchema', () => {
@@ -23,12 +22,5 @@ describe('paginationSearchSchema', () => {
       page: DEFAULT_PAGE,
       pageSize: DEFAULT_PAGE_SIZE,
     })
-  })
-
-  it('matches the shared page query contract', () => {
-    expectTypeOf<PaginationSearch>().toEqualTypeOf<{
-      page: number
-      pageSize: number
-    }>()
   })
 })

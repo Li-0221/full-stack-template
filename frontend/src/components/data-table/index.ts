@@ -21,5 +21,4 @@ export {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
   paginationSearchSchema,
-  type PaginationSearch,
 } from './search-schema'

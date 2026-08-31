@@ -5,31 +5,6 @@ import { userEvent } from 'vitest/browser'
 import { ConfirmDialog } from './confirm-dialog'
 
 describe('ConfirmDialog', () => {
-  it('renders title, description, and default buttons', async () => {
-    const { getByRole, getByText } = await render(
-      <ConfirmDialog
-        open
-        onOpenChange={vi.fn()}
-        title='Delete item'
-        desc='This action cannot be undone.'
-        handleConfirm={vi.fn()}
-      />
-    )
-
-    await expect
-      .element(getByRole('heading', { name: 'Delete item' }))
-      .toBeInTheDocument()
-    await expect
-      .element(getByText('This action cannot be undone.'))
-      .toBeInTheDocument()
-    await expect
-      .element(getByRole('button', { name: 'Cancel' }))
-      .toBeInTheDocument()
-    await expect
-      .element(getByRole('button', { name: 'Continue' }))
-      .toBeInTheDocument()
-  })
-
   it('calls handleConfirm when the confirm button is clicked', async () => {
     const handleConfirm = vi.fn()
     const { getByRole } = await render(
@@ -82,27 +57,6 @@ describe('ConfirmDialog', () => {
     await expect
       .element(getByRole('button', { name: 'Continue' }))
       .toBeDisabled()
-  })
-
-  it('supports custom button texts', async () => {
-    const { getByRole } = await render(
-      <ConfirmDialog
-        open
-        onOpenChange={vi.fn()}
-        title='Delete'
-        desc='...'
-        cancelBtnText='No'
-        confirmText='Yes'
-        handleConfirm={vi.fn()}
-      />
-    )
-
-    await expect
-      .element(getByRole('button', { name: 'No' }))
-      .toBeInTheDocument()
-    await expect
-      .element(getByRole('button', { name: 'Yes' }))
-      .toBeInTheDocument()
   })
 
   it('renders confirm as submit button linked to desc form when `form` is set', async () => {

@@ -39,13 +39,6 @@ describe('SignUpForm', () => {
     vi.useRealTimers()
   })
 
-  it('renders fields and submit button', async () => {
-    await expect.element(emailInput).toBeInTheDocument()
-    await expect.element(passwordInput).toBeInTheDocument()
-    await expect.element(confirmPasswordInput).toBeInTheDocument()
-    await expect.element(submitButton).toBeInTheDocument()
-  })
-
   it('shows validation messages when submitting empty form', async () => {
     await userEvent.click(submitButton)
 

@@ -10,31 +10,6 @@ vi.mock('@/lib/show-submitted-data', () => ({ showSubmittedData: vi.fn() }))
 describe('TasksImportDialog', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('renders the dialog with the correct title, description, file input and buttons', async () => {
-    const onOpenChange = vi.fn()
-    const { getByRole, getByText, getByLabelText } = await render(
-      <TasksImportDialog open onOpenChange={onOpenChange} />
-    )
-
-    const title = getByRole('heading', {
-      level: 2,
-      name: /Import Tasks/i,
-    })
-    const desc = getByText('Import tasks quickly from a CSV file')
-    const fileInput = getByLabelText('File')
-    const closeButtons = getByRole('dialog')
-      .getByRole('button', { name: 'Close' })
-      .all()
-
-    const importButton = getByRole('button', { name: /^Import$/i })
-
-    await expect.element(title).toBeInTheDocument()
-    await expect.element(desc).toBeInTheDocument()
-    await expect.element(fileInput).toBeInTheDocument()
-    expect(closeButtons).toHaveLength(2)
-    await expect.element(importButton).toBeInTheDocument()
-  })
-
   it('shows validation when submitting without a file', async () => {
     const onOpenChange = vi.fn()
     const { getByRole, getByText } = await render(

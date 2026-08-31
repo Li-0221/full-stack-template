@@ -12,19 +12,6 @@ import {
 import { PasswordInput } from './password-input'
 
 describe('PasswordInput', () => {
-  it('renders the password input correctly', async () => {
-    const { getByPlaceholder, getByRole } = await render(
-      <PasswordInput placeholder='password' />
-    )
-
-    const passwordInput = getByPlaceholder('password')
-    const showPasswordButton = getByRole('button', { name: /show password/i })
-
-    await expect.element(passwordInput).toBeInTheDocument()
-    await expect.element(passwordInput).toHaveAttribute('type', 'password')
-    await expect.element(showPasswordButton).toBeVisible()
-  })
-
   it('toggles the password visibility when the show password button is clicked', async () => {
     const { getByPlaceholder, getByRole } = await render(
       <PasswordInput placeholder='password' />

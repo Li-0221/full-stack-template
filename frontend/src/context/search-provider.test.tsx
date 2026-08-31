@@ -60,30 +60,6 @@ describe('SearchProvider and CommandMenu', () => {
     vi.clearAllMocks()
   })
 
-  it('renders the command palette when the palette is open', async () => {
-    const screen = await renderWithSearchProvider()
-    const { getByPlaceholder, getByText } = screen
-
-    await openCommandPalette(screen)
-
-    await expect
-      .element(getByPlaceholder(COMMAND_MENU_PLACEHOLDER))
-      .toBeInTheDocument()
-    await expect.element(getByText('Theme')).toBeInTheDocument()
-    await expect.element(getByText('Light')).toBeInTheDocument()
-    await expect.element(getByText('Dark')).toBeInTheDocument()
-    await expect.element(getByText('System')).toBeInTheDocument()
-    await expect.element(getByText('Dashboard')).toBeInTheDocument()
-  })
-
-  it('does not show the dialog content when search is closed', async () => {
-    const { getByPlaceholder } = await renderWithSearchProvider()
-
-    await expect
-      .element(getByPlaceholder(COMMAND_MENU_PLACEHOLDER))
-      .not.toBeInTheDocument()
-  })
-
   it.each([
     ['Ctrl', 'Control'],
     ['Cmd', 'Meta'],

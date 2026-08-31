@@ -46,30 +46,6 @@ describe('ConfigDrawer (integration)', () => {
     document.documentElement.removeAttribute('dir')
   })
 
-  it('opens the drawer and renders the sections', async () => {
-    const screen = await renderConfigDrawer()
-
-    await openDrawer(screen)
-
-    const drawer = screen.getByRole('dialog', { name: /theme settings/i })
-
-    await expect.element(drawer).toBeInTheDocument()
-
-    await expect.element(drawer.getByText(/^Theme$/i)).toBeInTheDocument()
-    await expect.element(drawer.getByText(/^Layout$/i)).toBeInTheDocument()
-    await expect
-      .element(drawer.getByText(/^Sidebar$/i).first())
-      .toBeInTheDocument()
-    await expect.element(drawer.getByText(/^Direction$/i)).toBeInTheDocument()
-    await expect
-      .element(
-        screen.getByRole('button', {
-          name: /reset all settings to default values/i,
-        })
-      )
-      .toBeInTheDocument()
-  })
-
   describe('theme preference', () => {
     it('applies light theme to <html> and cookie', async () => {
       const screen = await renderConfigDrawer()

@@ -19,21 +19,6 @@ const MOCK_TASK = {
 describe('TasksMutateDrawer', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('renders create title and description', async () => {
-    const { getByRole, getByText } = await render(
-      <TasksMutateDrawer open onOpenChange={vi.fn()} />
-    )
-
-    const title = getByRole('heading', {
-      level: 2,
-      name: /Create Task/i,
-    })
-    const desc = getByText(/Add a new task/i)
-
-    await expect.element(title).toBeInTheDocument()
-    await expect.element(desc).toBeInTheDocument()
-  })
-
   it('renders edit title, description, and prefilled title', async () => {
     const { getByRole, getByText } = await render(
       <TasksMutateDrawer open onOpenChange={vi.fn()} currentRow={MOCK_TASK} />

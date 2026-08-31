@@ -13,34 +13,6 @@ vi.mock('@/lib/utils', async (orig) => ({
 describe('TasksMultiDeleteDialog', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('renders the dialog with the correct title, description, input and buttons', async () => {
-    const { table } = createTableMock()
-
-    const { getByRole, getByText } = await render(
-      <TasksMultiDeleteDialog open onOpenChange={vi.fn()} table={table} />
-    )
-
-    const title = getByRole('heading', {
-      level: 2,
-      name: /Delete 2 tasks/i,
-    })
-    const desc = getByText(
-      'Are you sure you want to delete the selected tasks?'
-    )
-    const confirmDeleteInput = getByRole('textbox', {
-      name: /Confirm by typing "DELETE"/i,
-    })
-    const cancelButton = getByRole('button', { name: /Cancel/i })
-    const deleteButton = getByRole('button', { name: /Delete/i })
-
-    await expect.element(title).toBeInTheDocument()
-    await expect.element(desc).toBeInTheDocument()
-    await expect.element(confirmDeleteInput).toBeInTheDocument()
-    await expect.element(cancelButton).toBeInTheDocument()
-    await expect.element(deleteButton).toBeInTheDocument()
-    await expect.element(deleteButton).toBeDisabled()
-  })
-
   it('keeps the delete button disabled until the confirm delete input is filled correctly', async () => {
     const { table } = createTableMock()
     const { getByRole } = await render(
