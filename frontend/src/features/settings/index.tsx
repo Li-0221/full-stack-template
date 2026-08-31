@@ -1,7 +1,7 @@
 import { Outlet } from '@tanstack/react-router'
 import { Separator } from '@/components/ui/separator'
 import { ConfigDrawer } from '@/components/config-drawer'
-import { Monitor, Palette, ShieldCheck, UserCog } from '@/components/icons'
+import { ShieldCheck, UserCog } from '@/components/icons'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -19,16 +19,6 @@ const sidebarNavItems = [
     title: 'Security',
     href: '/settings/security',
     icon: <ShieldCheck size={18} />,
-  },
-  {
-    title: 'Appearance',
-    href: '/settings/appearance',
-    icon: <Palette size={18} />,
-  },
-  {
-    title: 'Display',
-    href: '/settings/display',
-    icon: <Monitor size={18} />,
   },
 ]
 
@@ -49,7 +39,7 @@ export function Settings() {
             Settings
           </h1>
           <p className='text-muted-foreground'>
-            Manage your profile, security, appearance, and local preferences.
+            Manage your profile and account security.
           </p>
         </div>
         <Separator className='my-4 lg:my-6' />
