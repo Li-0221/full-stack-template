@@ -39,10 +39,15 @@ docker compose exec backend python -m app.scripts.create_superuser
 
 ```bash
 make setup
-docker compose up -d db
+make dev
 ```
 
-后端与前端分别启动的命令见 [后端说明](backend/README.md) 和 [前端说明](frontend/README.md)。完整容器编排可使用：
+`make dev` 只在 Docker 中启动 PostgreSQL，并由 Make 在本机并行启动前后端。后端完成数据库 migration 后通过 `uvicorn --reload` 运行，前端通过 `pnpm dev` 启动 Vite。修改代码后会自动重载或热更新：
+
+- 前端：<http://localhost:5176>
+- Swagger UI：<http://localhost:8000/docs>
+
+按 `Ctrl+C` 会停止前后端开发进程，PostgreSQL 会继续运行以保留开发数据；使用 `make down` 停止它。完整容器编排可使用：
 
 ```bash
 make up
@@ -81,7 +86,7 @@ E2E 凭据只通过当前 shell 传入。
 
 ## 部署配置
 
-根目录 `.env.example` 只用于本地 Compose。生产环境应通过 secret manager 提供 `APP_SECRET_KEY`、数据库连接和数据库凭据，并在独立步骤执行 migration。
+根目录 `.env.example` 只用于本地开发和 Compose。生产环境应通过 secret manager 提供 `APP_SECRET_KEY`、数据库连接和数据库凭据，并在独立步骤执行 migration。
 
 前端运行时读取 `VITE_API_BASE_URL` 和 `VITE_APP_BASE_PATH`，同一镜像可以用于不同环境。
 
