@@ -1,3 +1,5 @@
+import type { AuthTokensData } from '@/client'
+
 export const API_SUCCESS_CODE = 0
 export const ACCESS_TOKEN_EXPIRED_CODE = 40111
 
@@ -21,9 +23,4 @@ export interface PageData<TItem> extends PageParams {
 
 export type PaginatedResponse<TItem> = ApiResponse<PageData<TItem>>
 
-export interface AuthTokens {
-  accessToken: string
-  accessExpiresAt: number
-  refreshToken: string
-  refreshExpiresAt: number
-}
+export type AuthTokens = AuthTokensData

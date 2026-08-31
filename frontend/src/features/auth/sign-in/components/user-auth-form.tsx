@@ -6,7 +6,8 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { useAuthStore } from '@/stores/auth-store'
-import { sleep, cn } from '@/lib/utils'
+import { handleServerError } from '@/lib/handle-server-error'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -19,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Loader2, LogIn } from '@/components/icons'
 import { PasswordInput } from '@/components/password-input'
+import { createSession } from '@/features/auth/data/session'
 
 const formSchema = z.object({
   email: z.email({
@@ -51,29 +53,20 @@ export function UserAuthForm({
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
+    try {
+      const tokens = await createSession(data)
+      auth.establishSession(tokens)
+      toast.success(`Welcome back, ${data.email}!`)
 
-    toast.promise(sleep(2000), {
-      loading: 'Signing in...',
-      success: () => {
-        setIsLoading(false)
-
-        auth.establishSession({
-          accessToken: 'mock-access-token',
-          accessExpiresAt: Date.now() + 15 * 60 * 1000,
-          refreshToken: 'mock-refresh-token',
-          refreshExpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-        })
-
-        // Redirect to the stored location or default to dashboard
-        const targetPath = redirectTo || '/'
-        navigate({ to: targetPath, replace: true })
-
-        return `Welcome back, ${data.email}!`
-      },
-      error: 'Error',
-    })
+      const targetPath = redirectTo || '/'
+      await navigate({ to: targetPath, replace: true })
+    } catch (error) {
+      handleServerError(error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

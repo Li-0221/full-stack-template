@@ -9,15 +9,42 @@ const FORM_MESSAGES = {
   passwordShort: 'Password must be at least 7 characters long.',
 } as const
 
-const navigate = vi.fn()
-const establishSessionMock = vi.fn()
+const { createSessionMock, establishSessionMock, navigate } = vi.hoisted(
+  () => ({
+    createSessionMock: vi.fn(),
+    establishSessionMock: vi.fn(),
+    navigate: vi.fn(),
+  })
+)
+const tokens = {
+  accessToken: 'server-access-token',
+  accessExpiresAt: Date.now() + 15 * 60 * 1000,
+  refreshToken: 'server-refresh-token',
+  refreshExpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+}
+
+vi.mock('@/features/auth/data/session', () => ({
+  createSession: createSessionMock,
+}))
 
 vi.mock('@/stores/auth-store', () => ({
-  useAuthStore: () => ({
-    auth: {
-      establishSession: establishSessionMock,
-    },
-  }),
+  getPersistedAccessToken: () => '',
+  getPersistedRefreshToken: () => '',
+  isPersistedAuthSessionCurrent: () => true,
+  useAuthStore: Object.assign(
+    () => ({ auth: { establishSession: establishSessionMock } }),
+    {
+      getState: () => ({
+        auth: {
+          accessToken: '',
+          expire: vi.fn(),
+          refreshSession: vi.fn(),
+          refreshToken: '',
+          sessionEpoch: 0,
+        },
+      }),
+    }
+  ),
 }))
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -42,11 +69,6 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   }
 })
 
-vi.mock('@/lib/utils', async (orig) => ({
-  ...(await orig()),
-  sleep: vi.fn(() => Promise.resolve()),
-}))
-
 describe('UserAuthForm', () => {
   describe('Rendering without redirectTo', () => {
     let screen: RenderResult
@@ -57,6 +79,7 @@ describe('UserAuthForm', () => {
 
     beforeEach(async () => {
       vi.clearAllMocks()
+      createSessionMock.mockResolvedValue(tokens)
       screen = await render(<UserAuthForm />)
       emailInput = screen.getByRole('textbox', { name: /^Email$/i })
       passwordInput = screen.getByLabelText(/^Password$/i)
@@ -91,12 +114,11 @@ describe('UserAuthForm', () => {
       await vi.waitFor(() =>
         expect(establishSessionMock).toHaveBeenCalledOnce()
       )
-      expect(establishSessionMock).toHaveBeenCalledWith({
-        accessToken: 'mock-access-token',
-        accessExpiresAt: expect.any(Number),
-        refreshToken: 'mock-refresh-token',
-        refreshExpiresAt: expect.any(Number),
+      expect(createSessionMock).toHaveBeenCalledWith({
+        email: 'a@b.com',
+        password: '1234567',
       })
+      expect(establishSessionMock).toHaveBeenCalledWith(tokens)
 
       await vi.waitFor(() =>
         expect(navigate).toHaveBeenCalledWith({ to: '/', replace: true })
@@ -106,6 +128,7 @@ describe('UserAuthForm', () => {
 
   it('navigates to redirectTo when provided', async () => {
     vi.clearAllMocks()
+    createSessionMock.mockResolvedValue(tokens)
 
     const { getByRole, getByLabelText } = await render(
       <UserAuthForm redirectTo='/settings' />

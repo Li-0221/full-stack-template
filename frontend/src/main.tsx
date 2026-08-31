@@ -11,10 +11,11 @@ import { appConfig } from '@/config/app'
 import { ACCESS_TOKEN_EXPIRED_CODE } from '@/types/api'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
-import { isApiError } from '@/lib/api-client'
+import { configureTokenRefresh, isApiError } from '@/lib/api-client'
 import { setupAppVersionNotification } from '@/lib/app-version-notification'
 import { env } from '@/lib/env'
 import { handleServerError } from '@/lib/handle-server-error'
+import { refreshSession } from '@/features/auth/data/session'
 import { DirectionProvider } from './context/direction-provider'
 import { FontProvider } from './context/font-provider'
 import { ThemeProvider } from './context/theme-provider'
@@ -27,6 +28,8 @@ document.title = appConfig.name
 document
   .querySelector('meta[name="description"]')
   ?.setAttribute('content', appConfig.description)
+
+configureTokenRefresh(refreshSession)
 
 function getErrorStatus(error: unknown) {
   if (isApiError(error)) return error.status
