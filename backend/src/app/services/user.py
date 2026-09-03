@@ -6,7 +6,6 @@ from app.db.session import DatabaseSessionManager
 from app.exceptions import (
     EmailAlreadyExistsError,
     InvalidCurrentPasswordError,
-    PermissionDeniedError,
     SelfAdministrationError,
     UserNotFoundError,
 )
@@ -45,30 +44,7 @@ class UserService:
                 raise EmailAlreadyExistsError from None
             return UserData.model_validate(user, from_attributes=True)
 
-    # 管理用例由 Service 再次校验 actor, 不能只依赖 Router 是否隐藏或暴露入口。
-    def create_user_as_admin(
-        self,
-        *,
-        actor: UserData,
-        email: str,
-        full_name: str | None,
-        password: str,
-        is_active: bool,
-        is_superuser: bool,
-    ) -> UserData:
-        if not actor.is_superuser:
-            raise PermissionDeniedError
-        return self.create_user(
-            email=email,
-            full_name=full_name,
-            password=password,
-            is_active=is_active,
-            is_superuser=is_superuser,
-        )
-
-    def get_user(self, *, actor: UserData, user_id: UUID) -> UserData:
-        if not actor.is_superuser:
-            raise PermissionDeniedError
+    def get_user(self, *, user_id: UUID) -> UserData:
         with self.manager.session_scope() as session:
             user = UserRepository(session).get_by_id(user_id)
             if user is None:
@@ -78,12 +54,9 @@ class UserService:
     def list_users(
         self,
         *,
-        actor: UserData,
         page: int,
         page_size: int,
     ) -> PageData[UserData]:
-        if not actor.is_superuser:
-            raise PermissionDeniedError
         with self.manager.session_scope() as session:
             items, total = UserRepository(session).list_page(
                 offset=(page - 1) * page_size,
@@ -150,7 +123,7 @@ class UserService:
     def update_user_as_admin(
         self,
         *,
-        actor: UserData,
+        actor_id: UUID,
         user_id: UUID,
         email: str,
         full_name: str | None,
@@ -158,9 +131,7 @@ class UserService:
         is_active: bool,
         is_superuser: bool,
     ) -> UserData:
-        if not actor.is_superuser:
-            raise PermissionDeniedError
-        if actor.id == user_id:
+        if actor_id == user_id:
             raise SelfAdministrationError
 
         hashed_password = hash_password(password) if password is not None else None
@@ -192,13 +163,10 @@ class UserService:
     def delete_user(
         self,
         *,
-        actor: UserData,
+        actor_id: UUID,
         user_id: UUID,
     ) -> None:
-        # 删除用户只属于管理员用例, 并且管理员不能通过管理端点删除自己。
-        if not actor.is_superuser:
-            raise PermissionDeniedError
-        if actor.id == user_id:
+        if actor_id == user_id:
             raise SelfAdministrationError
 
         with self.manager.session_scope() as session:

@@ -11,7 +11,7 @@
 - 后端 OpenAPI 是接口契约的唯一来源；使用 `make generate-client` 更新 `frontend/openapi.json` 和 `frontend/src/client`，使用 `make check-generated` 检查生成产物一致性，禁止手工修改生成文件。
 - 后端调用方向保持 `Router -> Service -> Repository -> PostgreSQL`。Service 拥有业务规则和事务，Repository 只负责持久化。
 - 前端业务接口直接调用生成 SDK；认证、业务错误和 token 刷新统一由共享客户端处理，不新增第二套 Axios、`fetch` wrapper 或 token 状态。
-- Users 菜单与路由共用 `frontend/src/lib/router-access.ts` 的管理员规则；前端控制可见性和导航体验，后端 Service 仍是权限事实与安全校验 owner。
+- Users 菜单与路由共用 `frontend/src/lib/router-access.ts` 的管理员规则；前端只控制可见性和导航体验，后端 Dependency 校验管理员入口权限，Service 保护资源关系和业务不变量。
 - 分页字段统一为 `page`、`pageSize`、`items` 和 `total`。
 - 保留 refresh token 轮换、重放保护、停用或修改密码后的 session 撤销，以及前端 single-flight 刷新。
 

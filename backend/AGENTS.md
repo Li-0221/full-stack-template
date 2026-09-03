@@ -5,7 +5,7 @@
 - 使用 Python 3.12、FastAPI、Pydantic v2、SQLAlchemy 2 同步 Session、Alembic、PostgreSQL 和 uv。
 - 只支持 `postgresql+psycopg`；测试数据库使用 Testcontainers，不增加 SQLite fallback。
 - 调用方向为 `Router -> Service -> Repository -> PostgreSQL`。
-- Router 只做 HTTP 绑定、依赖注入和响应组装；Service 拥有业务规则、授权、短 Session 和 commit/rollback；Repository 只做查询、稳定排序、约束相关写入和 `flush()`。
+- Router 只做 HTTP 绑定、依赖注入和响应组装；Dependency 拥有认证和粗粒度角色权限；Service 拥有业务规则、资源级授权与不变量、短 Session 和 commit/rollback；Repository 只做查询、稳定排序、约束相关写入和 `flush()`。
 - FastAPI dependency 只注入 `DatabaseSessionManager`；公开 Service 用例创建并关闭自己的短 Session，不通过 dependency `yield` 持有业务 Session。
 - 简单用例由 Router 传递明确的 typed 参数，不为一比一复制增加 Command。存在 HTTP/CLI/worker 多入口、不同信任级别、PATCH 三态、入站 shape 与用例语义不同或参数组需要独立演进时，启用 Service-owned Command。
 - 内部 ORM/Result 与公开 Data 涉及改名、计算、聚合重组、角色视图、API 版本差异或多处共享转换时，启用 Presenter/mapper/转换函数做显式 allowlist 映射。
@@ -20,7 +20,7 @@
 - 入站 schema 继承 `RequestModel` 以获得 camelCase alias 和 `extra="forbid"`；公开 response data 继承 `ResponseModel`。内部 Command/Result 不继承 HTTP schema 基类。
 - PUT 表示完整替换；可清空字段显式传 `null`。PATCH 必须区分 omitted、`null` 和普通值。
 - 已知业务失败使用 `AppError`，由统一 handler 映射；未知错误不得泄漏 stack、SQL、headers、连接串或 payload。
-- 身份只来自验证后的 Bearer token，权限由拥有业务事实的 Service 判断。密码使用 Argon2，token、密码和 Secret 不得进入日志或响应。
+- 身份只来自验证后的 Bearer token；管理员等粗粒度入口权限由 Dependency 判断，资源关系和业务不变量由 Service 判断。密码使用 Argon2，token、密码和 Secret 不得进入日志或响应。
 - 缺失、无效或过期认证返回 `401` 并保留 `WWW-Authenticate: Bearer`；身份有效但权限不足返回 `403`。
 - refresh token 只保存 hash 并在刷新时轮换；修改密码或停用账号必须撤销该用户的 refresh sessions。
 - 修改密码不会主动撤销已签发的 access token；它在自然过期前仍有效。认证请求会查询当前用户，因此账号停用或删除后旧 access token 不能继续使用。
