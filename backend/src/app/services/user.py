@@ -11,12 +11,7 @@ from app.exceptions import (
     UserNotFoundError,
 )
 from app.repositories.auth_session import AuthSessionRepository
-from app.repositories.user import (
-    DuplicateUserRecordError,
-    UserRecordCreate,
-    UserRecordReplacement,
-    UserRepository,
-)
+from app.repositories.user import DuplicateUserRecordError, UserRepository
 from app.schemas.common import PageData
 from app.schemas.user import UserData
 
@@ -34,17 +29,16 @@ class UserService:
         is_active: bool,
         is_superuser: bool,
     ) -> UserData:
-        record = UserRecordCreate(
-            email=email.strip().casefold(),
-            full_name=full_name,
-            hashed_password=hash_password(password),
-            is_active=is_active,
-            is_superuser=is_superuser,
-        )
         with self.manager.session_scope() as session:
             repository = UserRepository(session)
             try:
-                user = repository.create(record)
+                user = repository.create(
+                    email=email.strip().casefold(),
+                    full_name=full_name,
+                    hashed_password=hash_password(password),
+                    is_active=is_active,
+                    is_superuser=is_superuser,
+                )
                 session.commit()
             except DuplicateUserRecordError:
                 session.rollback()
@@ -114,15 +108,15 @@ class UserService:
             user = repository.get_by_id(actor.id)
             if user is None:
                 raise UserNotFoundError
-            record = UserRecordReplacement(
-                email=email.strip().casefold(),
-                full_name=full_name,
-                hashed_password=None,
-                is_active=user.is_active,
-                is_superuser=user.is_superuser,
-            )
             try:
-                repository.replace(user=user, data=record)
+                repository.replace(
+                    user=user,
+                    email=email.strip().casefold(),
+                    full_name=full_name,
+                    hashed_password=None,
+                    is_active=user.is_active,
+                    is_superuser=user.is_superuser,
+                )
                 session.commit()
             except DuplicateUserRecordError:
                 session.rollback()
@@ -170,20 +164,20 @@ class UserService:
             raise SelfAdministrationError
 
         hashed_password = hash_password(password) if password is not None else None
-        record = UserRecordReplacement(
-            email=email.strip().casefold(),
-            full_name=full_name,
-            hashed_password=hashed_password,
-            is_active=is_active,
-            is_superuser=is_superuser,
-        )
         with self.manager.session_scope() as session:
             repository = UserRepository(session)
             user = repository.get_by_id(user_id)
             if user is None:
                 raise UserNotFoundError
             try:
-                repository.replace(user=user, data=record)
+                repository.replace(
+                    user=user,
+                    email=email.strip().casefold(),
+                    full_name=full_name,
+                    hashed_password=hashed_password,
+                    is_active=is_active,
+                    is_superuser=is_superuser,
+                )
                 if password is not None or not is_active:
                     AuthSessionRepository(session).revoke_all_for_user(
                         user.id,

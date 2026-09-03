@@ -1,6 +1,5 @@
 import secrets
 
-from app.repositories.user import UserRecordCreate
 from app.schemas.auth import AccessTokenResponse
 from app.schemas.user import UserCreateRequest, UserPasswordChangeRequest
 from app.services.auth import AccessTokenResult
@@ -27,15 +26,6 @@ def test_sensitive_values_do_not_appear_in_contract_reprs() -> None:
             AccessTokenResponse(
                 access_token=sensitive_value,
                 expires_in=1800,
-            )
-        ),
-        repr(
-            UserRecordCreate(
-                email="repr-check@example.com",
-                full_name=None,
-                hashed_password=sensitive_value,
-                is_active=True,
-                is_superuser=False,
             )
         ),
         repr(AccessTokenResult(access_token=sensitive_value, expires_in=1800)),

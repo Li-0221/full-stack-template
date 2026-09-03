@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from uuid import UUID
 
 from psycopg.errors import UniqueViolation
@@ -20,25 +19,6 @@ def is_email_unique_violation(error: IntegrityError) -> bool:
 
 class DuplicateUserRecordError(Exception):
     """Raised when the database rejects a duplicate user email."""
-
-
-@dataclass(frozen=True, slots=True)
-class UserRecordCreate:
-    email: str
-    full_name: str | None
-    # 只从调试 repr 中隐藏哈希, Repository 仍会收到并持久化真实值。
-    hashed_password: str = field(repr=False)
-    is_active: bool
-    is_superuser: bool
-
-
-@dataclass(frozen=True, slots=True)
-class UserRecordReplacement:
-    email: str
-    full_name: str | None
-    hashed_password: str | None = field(repr=False)
-    is_active: bool
-    is_superuser: bool
 
 
 class UserRepository:
@@ -63,13 +43,21 @@ class UserRepository:
         total = self.session.scalar(count_statement) or 0
         return items, total
 
-    def create(self, data: UserRecordCreate) -> User:
+    def create(
+        self,
+        *,
+        email: str,
+        full_name: str | None,
+        hashed_password: str,
+        is_active: bool,
+        is_superuser: bool,
+    ) -> User:
         user = User(
-            email=data.email,
-            full_name=data.full_name,
-            hashed_password=data.hashed_password,
-            is_active=data.is_active,
-            is_superuser=data.is_superuser,
+            email=email,
+            full_name=full_name,
+            hashed_password=hashed_password,
+            is_active=is_active,
+            is_superuser=is_superuser,
         )
         self.session.add(user)
         try:
@@ -80,13 +68,22 @@ class UserRepository:
             raise
         return user
 
-    def replace(self, *, user: User, data: UserRecordReplacement) -> User:
-        user.email = data.email
-        user.full_name = data.full_name
-        if data.hashed_password is not None:
-            user.hashed_password = data.hashed_password
-        user.is_active = data.is_active
-        user.is_superuser = data.is_superuser
+    def replace(
+        self,
+        *,
+        user: User,
+        email: str,
+        full_name: str | None,
+        hashed_password: str | None,
+        is_active: bool,
+        is_superuser: bool,
+    ) -> User:
+        user.email = email
+        user.full_name = full_name
+        if hashed_password is not None:
+            user.hashed_password = hashed_password
+        user.is_active = is_active
+        user.is_superuser = is_superuser
 
         try:
             self.session.flush()
