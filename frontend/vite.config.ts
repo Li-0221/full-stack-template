@@ -7,6 +7,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { playwright } from '@vitest/browser-playwright'
 
 const DEFAULT_DEV_PORT = 5176
+const ENV_DIR = path.resolve(__dirname, '..')
 
 function normalizeBasePath(value: string | undefined) {
   const path = value?.trim().replace(/^\/+|\/+$/g, '')
@@ -22,12 +23,13 @@ function resolveDevPort(value: string | undefined) {
 
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
-  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  const env = loadEnv(mode, ENV_DIR, 'VITE_')
   const appBasePath = normalizeBasePath(env.VITE_APP_BASE_PATH)
   const appBuildId = new Date().toISOString()
 
   return {
     base: command === 'serve' ? appBasePath : './',
+    envDir: ENV_DIR,
     plugins: [
       {
         name: 'full-stack-runtime-base-path',

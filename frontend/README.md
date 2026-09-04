@@ -7,10 +7,12 @@ React 管理端包含应用壳层、登录、用户 CRUD、当前用户资料与
 需要 Node.js 20.19+ 和 pnpm 10.34。
 
 ```bash
-pnpm install
-cp .env.example .env
-pnpm dev
+cd ..
+make setup
+make dev-frontend
 ```
+
+Vite 通过 `envDir` 原生读取仓库根目录 `.env`；Makefile 不负责注入前端变量，`frontend` 目录不维护单独的 `.env`。
 
 运行时配置：
 

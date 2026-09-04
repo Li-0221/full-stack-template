@@ -6,17 +6,18 @@ FastAPI 后端提供认证、当前用户资料和管理员用户 CRUD。结构�
 
 需要 Python 3.12、uv 0.11、Docker 和 PostgreSQL。应用只支持 `postgresql+psycopg`。
 
+从仓库根目录执行：
+
 ```bash
-cp .env.example .env
-# 填写本地隔离配置
-set -a
-source .env
-set +a
+make setup
+# 编辑根目录 .env，填写当前环境配置
 docker compose up -d --wait db
-uv sync --all-groups
-uv run alembic upgrade head
-uv run uvicorn app.main:app --reload
+make dev-backend
 ```
+
+`scripts/backend_dev.py` 会自行解析根目录 `.env`、把容器数据库地址转换为宿主机地址、执行 migration，并启动带热更新的 Uvicorn。Makefile 不负责注入配置；不要用 shell `source` 加载包含 JSON 值的环境文件。
+
+本机后端端口与 Compose 暴露端口统一使用根 `.env` 中的 `BACKEND_PORT`，默认是 `8000`。
 
 - Swagger UI：<http://127.0.0.1:8000/docs>
 - ReDoc：<http://127.0.0.1:8000/redoc>

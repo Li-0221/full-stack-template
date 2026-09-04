@@ -42,7 +42,11 @@ make setup
 make dev
 ```
 
+`make setup` 会从 `.env.example` 创建唯一的根目录 `.env`。本地开发和 Docker Compose 使用相同的变量结构；不同环境只替换变量值，不在 `backend` 或 `frontend` 下维护第二份配置。
+
 `make dev` 只在 Docker 中启动 PostgreSQL，并由 Make 在本机并行启动前后端。后端完成数据库 migration 后通过 `uvicorn --reload` 运行，前端通过 `pnpm dev` 启动 Vite。修改代码后会自动重载或热更新：
+
+Backend 开发脚本自行解析根 `.env`；Vite 通过 `envDir` 原生读取根 `.env`；Makefile 不负责导出环境变量。部署时可让 Compose 读取服务器根 `.env`，或通过 `docker compose --env-file /path/to/production.env` 注入相同变量。不要把真实凭据提交到仓库。
 
 - 前端：<http://localhost:5176>
 - Swagger UI：<http://localhost:8000/docs>
@@ -86,7 +90,7 @@ E2E 凭据只通过当前 shell 传入。
 
 ## 部署配置
 
-根目录 `.env.example` 只用于本地开发和 Compose。生产环境应通过 secret manager 提供 `APP_SECRET_KEY`、数据库连接和数据库凭据，并在独立步骤执行 migration。
+根目录 `.env.example` 定义本地开发和 Compose 共用的变量结构。生产环境应通过 secret manager 提供 `APP_SECRET_KEY`、数据库连接和数据库凭据，并在独立步骤执行 migration。
 
 前端运行时读取 `VITE_API_BASE_URL` 和 `VITE_APP_BASE_PATH`，同一镜像可以用于不同环境。
 
