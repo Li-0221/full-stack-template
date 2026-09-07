@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createAuthStore } from './auth-store'
 
 const AUTH_STORAGE_KEY = 'full_stack_admin_session_v3'
@@ -31,6 +31,7 @@ describe('useAuthStore', () => {
 
     expect(JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) ?? '')).toEqual({
       version: 3,
+      sessionId: expect.any(String),
       ...tokens,
     })
     const useAuthStoreAfterReload = createAuthStore()
@@ -46,16 +47,19 @@ describe('useAuthStore', () => {
     const auth = useAuthStore.getState().auth
     auth.establishSession(tokens)
     const sessionEpoch = useAuthStore.getState().auth.sessionEpoch
+    const sessionId = useAuthStore.getState().auth.sessionId
 
     useAuthStore.getState().auth.refreshSession({
       ...tokens,
       accessToken: 'refreshed-access-token',
+      refreshToken: 'rotated-refresh-token',
     })
 
     expect(useAuthStore.getState().auth).toMatchObject({
       accessToken: 'refreshed-access-token',
-      refreshToken: 'refresh-token',
+      refreshToken: 'rotated-refresh-token',
       sessionEpoch,
+      sessionId,
     })
   })
 
@@ -89,5 +93,21 @@ describe('useAuthStore', () => {
 
     expect(useAuthStore.getState().auth.refreshToken).toBe('')
     expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull()
+  })
+
+  it('keeps the in-memory session if storage reads become unavailable', () => {
+    const store = createAuthStore()
+    store.getState().auth.establishSession(tokens)
+    const read = vi
+      .spyOn(Storage.prototype, 'getItem')
+      .mockImplementation(() => {
+        throw new Error('Storage unavailable')
+      })
+    try {
+      store.getState().auth.syncFromStorage()
+      expect(store.getState().auth.accessToken).toBe(tokens.accessToken)
+    } finally {
+      read.mockRestore()
+    }
   })
 })

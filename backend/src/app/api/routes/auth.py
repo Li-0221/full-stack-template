@@ -10,9 +10,17 @@ from app.schemas.auth import (
     SessionLoginRequest,
     SessionRefreshRequest,
 )
-from app.schemas.common import ApiResponse
+from app.schemas.common import ApiResponse, ErrorResponse
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(
+    prefix="/auth",
+    tags=["authentication"],
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+    },
+)
 
 
 @router.post("/session")

@@ -20,6 +20,7 @@ import type {
   authenticationRefreshSessionErrors,
   authenticationRefreshSessionResponses,
   healthHealthCheckData,
+  healthHealthCheckErrors,
   healthHealthCheckResponses,
   usersChangeCurrentUserPasswordData,
   usersChangeCurrentUserPasswordErrors,
@@ -31,6 +32,7 @@ import type {
   usersDeleteUserErrors,
   usersDeleteUserResponses,
   usersGetCurrentUserData,
+  usersGetCurrentUserErrors,
   usersGetCurrentUserResponses,
   usersGetUserData,
   usersGetUserErrors,
@@ -73,7 +75,7 @@ export class HealthService {
   ) {
     return (options?.client ?? client).get<
       healthHealthCheckResponses,
-      unknown,
+      healthHealthCheckErrors,
       ThrowOnError
     >({
       responseType: 'json',
@@ -178,7 +180,7 @@ export class UsersService {
   ) {
     return (options?.client ?? client).get<
       usersGetCurrentUserResponses,
-      unknown,
+      usersGetCurrentUserErrors,
       ThrowOnError
     >({
       responseType: 'json',

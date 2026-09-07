@@ -1,20 +1,23 @@
 import type { AuthTokens } from '@/types/api'
 import { create } from 'zustand'
 
-const AUTH_SESSION_STORAGE_KEY = 'full_stack_admin_session_v3'
+export const AUTH_SESSION_STORAGE_KEY = 'full_stack_admin_session_v3'
 const AUTH_SESSION_STORAGE_VERSION = 3
 
 interface PersistedAuthSession extends AuthTokens {
   version: typeof AUTH_SESSION_STORAGE_VERSION
+  sessionId: string
 }
 
 interface AuthSessionState extends AuthTokens {
+  sessionId: string
   sessionEpoch: number
   isSessionExpired: boolean
   establishSession: (tokens: AuthTokens) => void
   refreshSession: (tokens: AuthTokens) => void
   expire: () => void
   reset: () => void
+  syncFromStorage: () => AuthSessionState
 }
 
 interface AuthState {
@@ -46,13 +49,14 @@ function clearPersistedAuthSession() {
   }
 }
 
-function persistAuthSession(tokens: AuthTokens) {
+function persistAuthSession(tokens: AuthTokens, sessionId: string) {
   const storage = getLocalStorage()
   if (!storage) return
 
   const value: PersistedAuthSession = {
     version: AUTH_SESSION_STORAGE_VERSION,
     ...tokens,
+    sessionId,
   }
   try {
     storage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(value))
@@ -61,7 +65,9 @@ function persistAuthSession(tokens: AuthTokens) {
   }
 }
 
-function parseAuthSession(value: string | null): AuthTokens | null {
+function parseAuthSession(
+  value: string | null
+): (AuthTokens & { sessionId: string }) | null {
   if (!value) return null
 
   try {
@@ -77,13 +83,17 @@ function parseAuthSession(value: string | null): AuthTokens | null {
       parsed.refreshToken.length > 0 &&
       typeof parsed.refreshExpiresAt === 'number' &&
       Number.isFinite(parsed.refreshExpiresAt) &&
-      parsed.refreshExpiresAt > Date.now()
+      parsed.refreshExpiresAt > Date.now() &&
+      (parsed.sessionId === undefined ||
+        (typeof parsed.sessionId === 'string' && parsed.sessionId.length > 0))
     ) {
       return {
         accessToken: parsed.accessToken,
         accessExpiresAt: parsed.accessExpiresAt,
         refreshToken: parsed.refreshToken,
         refreshExpiresAt: parsed.refreshExpiresAt,
+        // Existing v3 sessions adopt their current token as a stable ID once.
+        sessionId: parsed.sessionId ?? parsed.refreshToken,
       }
     }
   } catch {
@@ -93,59 +103,28 @@ function parseAuthSession(value: string | null): AuthTokens | null {
   return null
 }
 
-function readPersistedAuthSession(): AuthTokens {
+function readPersistedAuthSession():
+  | (AuthTokens & { sessionId: string })
+  | undefined {
   try {
     const persistedSession = parseAuthSession(
       getLocalStorage()?.getItem(AUTH_SESSION_STORAGE_KEY) ?? null
     )
     if (persistedSession) return persistedSession
   } catch {
-    return EMPTY_TOKENS
+    return undefined
   }
 
   clearPersistedAuthSession()
-  return EMPTY_TOKENS
-}
-
-export function getPersistedAccessToken() {
-  const storage = getLocalStorage()
-  if (!storage) return undefined
-
-  try {
-    return (
-      parseAuthSession(storage.getItem(AUTH_SESSION_STORAGE_KEY))
-        ?.accessToken ?? ''
-    )
-  } catch {
-    return undefined
-  }
-}
-
-export function getPersistedRefreshToken() {
-  const storage = getLocalStorage()
-  if (!storage) return undefined
-
-  try {
-    return (
-      parseAuthSession(storage.getItem(AUTH_SESSION_STORAGE_KEY))
-        ?.refreshToken ?? ''
-    )
-  } catch {
-    return undefined
-  }
-}
-
-export function isPersistedAuthSessionCurrent(refreshToken: string) {
-  const persistedRefreshToken = getPersistedRefreshToken()
-  return (
-    persistedRefreshToken === undefined ||
-    persistedRefreshToken === refreshToken
-  )
+  return { ...EMPTY_TOKENS, sessionId: '' }
 }
 
 export function createAuthStore() {
-  return create<AuthState>()((set) => {
-    const persistedSession = readPersistedAuthSession()
+  return create<AuthState>()((set, get) => {
+    const persistedSession = readPersistedAuthSession() ?? {
+      ...EMPTY_TOKENS,
+      sessionId: '',
+    }
 
     const clearSession = (isSessionExpired: boolean) =>
       set((state) => {
@@ -155,6 +134,8 @@ export function createAuthStore() {
           auth: {
             ...state.auth,
             ...EMPTY_TOKENS,
+            sessionId: '',
+            sessionEpoch: state.auth.sessionEpoch + 1,
             isSessionExpired,
           },
         }
@@ -167,12 +148,15 @@ export function createAuthStore() {
         isSessionExpired: false,
         establishSession: (tokens) =>
           set((state) => {
-            persistAuthSession(tokens)
+            // Keep the initial token as the ID throughout subsequent rotations.
+            const sessionId = tokens.refreshToken
+            persistAuthSession(tokens, sessionId)
             return {
               ...state,
               auth: {
                 ...state.auth,
                 ...tokens,
+                sessionId,
                 sessionEpoch: state.auth.sessionEpoch + 1,
                 isSessionExpired: false,
               },
@@ -180,7 +164,7 @@ export function createAuthStore() {
           }),
         refreshSession: (tokens) =>
           set((state) => {
-            persistAuthSession(tokens)
+            persistAuthSession(tokens, state.auth.sessionId)
             return {
               ...state,
               auth: {
@@ -192,6 +176,28 @@ export function createAuthStore() {
           }),
         expire: () => clearSession(true),
         reset: () => clearSession(false),
+        syncFromStorage: () => {
+          if (!getLocalStorage()) return get().auth
+          const session = readPersistedAuthSession()
+          if (!session) return get().auth
+          const auth = get().auth
+          if (
+            session.sessionId === auth.sessionId &&
+            session.accessToken === auth.accessToken
+          )
+            return auth
+          set({
+            auth: {
+              ...auth,
+              ...session,
+              sessionEpoch:
+                auth.sessionEpoch +
+                (session.sessionId === auth.sessionId ? 0 : 1),
+              isSessionExpired: false,
+            },
+          })
+          return get().auth
+        },
       },
     }
   })

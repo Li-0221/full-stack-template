@@ -1,11 +1,20 @@
 SHELL := /bin/bash
 
-.PHONY: setup dev dev-backend dev-frontend up down logs generate-client check-generated check-backend check-frontend check
+.PHONY: setup setup-env admin migrate dev dev-backend dev-frontend up down logs generate-client check-generated check-backend check-frontend check
 
 setup:
-	@test -f .env || cp .env.example .env
 	cd backend && uv sync --all-groups
+	$(MAKE) setup-env
 	cd frontend && pnpm install --frozen-lockfile
+
+setup-env:
+	cd backend && uv run python ../scripts/backend.py setup
+
+admin:
+	cd backend && uv run python ../scripts/backend.py admin
+
+migrate:
+	cd backend && uv run python ../scripts/backend.py migrate $(ARGS)
 
 dev:
 	@test -f .env || { echo "Missing .env; run 'make setup' first."; exit 1; }
@@ -22,7 +31,7 @@ dev:
 		wait -n
 
 dev-backend:
-	cd backend && uv run python ../scripts/backend_dev.py
+	cd backend && uv run python ../scripts/backend.py dev
 
 dev-frontend:
 	cd frontend && pnpm dev

@@ -135,13 +135,21 @@ export type Body_authentication_login_access_token = {
 }
 
 /**
- * HTTPValidationError
+ * ErrorResponse
  */
-export type HTTPValidationError = {
+export type ErrorResponse = {
   /**
-   * Detail
+   * Code
    */
-  detail?: Array<ValidationError>
+  code: number
+  /**
+   * Data
+   */
+  data?: null
+  /**
+   * Message
+   */
+  message: string
 }
 
 /**
@@ -314,40 +322,22 @@ export type UserSelfPutRequest = {
   fullName: string | null
 }
 
-/**
- * ValidationError
- */
-export type ValidationError = {
-  /**
-   * Location
-   */
-  loc: Array<string | number>
-  /**
-   * Message
-   */
-  msg: string
-  /**
-   * Error Type
-   */
-  type: string
-  /**
-   * Input
-   */
-  input?: unknown
-  /**
-   * Context
-   */
-  ctx?: {
-    [key: string]: unknown
-  }
-}
-
 export type healthHealthCheckData = {
   body?: never
   path?: never
   query?: never
   url: '/api/v1/health'
 }
+
+export type healthHealthCheckErrors = {
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
+}
+
+export type healthHealthCheckError =
+  healthHealthCheckErrors[keyof healthHealthCheckErrors]
 
 export type healthHealthCheckResponses = {
   /**
@@ -368,9 +358,21 @@ export type authenticationCreateSessionData = {
 
 export type authenticationCreateSessionErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type authenticationCreateSessionError =
@@ -395,9 +397,21 @@ export type authenticationRefreshSessionData = {
 
 export type authenticationRefreshSessionErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type authenticationRefreshSessionError =
@@ -422,9 +436,21 @@ export type authenticationLogoutSessionData = {
 
 export type authenticationLogoutSessionErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type authenticationLogoutSessionError =
@@ -449,9 +475,21 @@ export type authenticationLoginAccessTokenData = {
 
 export type authenticationLoginAccessTokenErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type authenticationLoginAccessTokenError =
@@ -474,6 +512,40 @@ export type usersGetCurrentUserData = {
   url: '/api/v1/users/me'
 }
 
+export type usersGetCurrentUserErrors = {
+  /**
+   * Bad Request
+   */
+  400: ErrorResponse
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Not Found
+   */
+  404: ErrorResponse
+  /**
+   * Conflict
+   */
+  409: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
+}
+
+export type usersGetCurrentUserError =
+  usersGetCurrentUserErrors[keyof usersGetCurrentUserErrors]
+
 export type usersGetCurrentUserResponses = {
   /**
    * Successful Response
@@ -493,9 +565,33 @@ export type usersUpdateCurrentUserData = {
 
 export type usersUpdateCurrentUserErrors = {
   /**
-   * Validation Error
+   * Bad Request
    */
-  422: HTTPValidationError
+  400: ErrorResponse
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Not Found
+   */
+  404: ErrorResponse
+  /**
+   * Conflict
+   */
+  409: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type usersUpdateCurrentUserError =
@@ -520,9 +616,33 @@ export type usersChangeCurrentUserPasswordData = {
 
 export type usersChangeCurrentUserPasswordErrors = {
   /**
-   * Validation Error
+   * Bad Request
    */
-  422: HTTPValidationError
+  400: ErrorResponse
+  /**
+   * Unauthorized
+   */
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Not Found
+   */
+  404: ErrorResponse
+  /**
+   * Conflict
+   */
+  409: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type usersChangeCurrentUserPasswordError =
@@ -556,9 +676,29 @@ export type usersListUsersData = {
 
 export type usersListUsersErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Not Found
+   */
+  404: ErrorResponse
+  /**
+   * Conflict
+   */
+  409: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type usersListUsersError =
@@ -583,9 +723,29 @@ export type usersCreateUserData = {
 
 export type usersCreateUserErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Not Found
+   */
+  404: ErrorResponse
+  /**
+   * Conflict
+   */
+  409: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type usersCreateUserError =
@@ -615,9 +775,29 @@ export type usersDeleteUserData = {
 
 export type usersDeleteUserErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Not Found
+   */
+  404: ErrorResponse
+  /**
+   * Conflict
+   */
+  409: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type usersDeleteUserError =
@@ -647,9 +827,29 @@ export type usersGetUserData = {
 
 export type usersGetUserErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Not Found
+   */
+  404: ErrorResponse
+  /**
+   * Conflict
+   */
+  409: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type usersGetUserError = usersGetUserErrors[keyof usersGetUserErrors]
@@ -678,9 +878,29 @@ export type usersUpdateUserData = {
 
 export type usersUpdateUserErrors = {
   /**
-   * Validation Error
+   * Unauthorized
    */
-  422: HTTPValidationError
+  401: ErrorResponse
+  /**
+   * Forbidden
+   */
+  403: ErrorResponse
+  /**
+   * Not Found
+   */
+  404: ErrorResponse
+  /**
+   * Conflict
+   */
+  409: ErrorResponse
+  /**
+   * Unprocessable Entity
+   */
+  422: ErrorResponse
+  /**
+   * Internal Server Error
+   */
+  500: ErrorResponse
 }
 
 export type usersUpdateUserError =

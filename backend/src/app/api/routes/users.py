@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Path, Query, Response, status
 
 from app.dependencies.auth import CurrentUser, require_superuser
 from app.dependencies.user import UserServiceDep
-from app.schemas.common import ApiResponse, PageData, PaginationQuery
+from app.schemas.common import ApiResponse, ErrorResponse, PageData, PaginationQuery
 from app.schemas.user import (
     UserCreateRequest,
     UserData,
@@ -14,11 +14,29 @@ from app.schemas.user import (
     UserSelfPutRequest,
 )
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(
+    prefix="/users",
+    tags=["users"],
+    responses={
+        400: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+    },
+)
 admin_router = APIRouter(
     prefix="/users",
     tags=["users"],
     dependencies=[Depends(require_superuser)],
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+    },
 )
 # 路由与 OpenAPI 使用 camelCase, 函数内部仍保留 Python 的 snake_case 命名。
 UserIdPath = Annotated[UUID, Path(alias="userId")]

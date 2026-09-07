@@ -12,7 +12,7 @@ from app.core.security import (
 )
 from app.db.session import DatabaseSessionManager
 from app.exceptions import AuthenticationRequiredError, InactiveUserError, InvalidCredentialsError
-from app.repositories.auth_session import AuthSessionRecordCreate, AuthSessionRepository
+from app.repositories.auth_session import AuthSessionRepository
 from app.repositories.user import UserRepository
 from app.schemas.auth import AuthTokensData
 from app.schemas.user import UserData
@@ -106,15 +106,15 @@ class AuthService:
             expires_minutes=self.access_token_expire_minutes,
         )
         refresh_token = create_refresh_token()
-        record = AuthSessionRecordCreate(
-            user_id=facts.user.id,
-            refresh_token_hash=hash_refresh_token(refresh_token),
-            expires_at=refresh_expires_at,
-        )
+        refresh_token_hash = hash_refresh_token(refresh_token)
         with self.manager.session_scope() as session:
             repository = AuthSessionRepository(session)
             repository.delete_expired(expired_at=issued_at)
-            repository.create(record)
+            repository.create(
+                user_id=facts.user.id,
+                refresh_token_hash=refresh_token_hash,
+                expires_at=refresh_expires_at,
+            )
             session.commit()
         return AuthTokensData(
             access_token=access_token,

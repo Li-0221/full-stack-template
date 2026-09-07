@@ -38,11 +38,12 @@ class UserService:
                     is_active=is_active,
                     is_superuser=is_superuser,
                 )
+                data = UserData.model_validate(user, from_attributes=True)
                 session.commit()
             except DuplicateUserRecordError:
                 session.rollback()
                 raise EmailAlreadyExistsError from None
-            return UserData.model_validate(user, from_attributes=True)
+            return data
 
     def get_user(self, *, user_id: UUID) -> UserData:
         with self.manager.session_scope() as session:

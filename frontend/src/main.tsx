@@ -8,11 +8,11 @@ import {
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { appConfig } from '@/config/app'
-import { ACCESS_TOKEN_EXPIRED_CODE } from '@/types/api'
 import { toast } from 'sonner'
-import { useAuthStore } from '@/stores/auth-store'
+import { AUTH_SESSION_STORAGE_KEY, useAuthStore } from '@/stores/auth-store'
 import { configureTokenRefresh, isApiError } from '@/lib/api-client'
 import { setupAppVersionNotification } from '@/lib/app-version-notification'
+import { bindAuthSessionEffects } from '@/lib/auth-session-effects'
 import { env } from '@/lib/env'
 import { handleServerError } from '@/lib/handle-server-error'
 import { refreshSession } from '@/features/auth/data/session'
@@ -37,15 +37,8 @@ function getErrorStatus(error: unknown) {
   return undefined
 }
 
-function isAuthenticationError(error: unknown) {
-  if (getErrorStatus(error) === 401) return true
-  if (!isApiError(error)) return false
-
-  return error.code === ACCESS_TOKEN_EXPIRED_CODE
-}
-
 function handleAuthenticationError(error: unknown) {
-  if (!isAuthenticationError(error)) return false
+  if (getErrorStatus(error) !== 401) return false
 
   toast.error('Session expired!')
   useAuthStore.getState().auth.reset()
@@ -107,6 +100,24 @@ const router = createRouter({
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
 })
+
+const unbindAuthSessionEffects = bindAuthSessionEffects(queryClient, router)
+
+function syncAuthStorage(event: StorageEvent) {
+  if (
+    event.storageArea !== localStorage ||
+    (event.key !== null && event.key !== AUTH_SESSION_STORAGE_KEY)
+  )
+    return
+  useAuthStore.getState().auth.syncFromStorage()
+}
+window.addEventListener('storage', syncAuthStorage)
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    unbindAuthSessionEffects()
+    window.removeEventListener('storage', syncAuthStorage)
+  })
+}
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {

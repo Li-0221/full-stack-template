@@ -45,7 +45,7 @@ function createResponse<TData>(
 function unauthorized(config: InternalAxiosRequestConfig) {
   const response = createResponse(
     config,
-    { code: 40101, data: {}, message: 'Session expired' },
+    { code: 10001, data: null, message: 'Authentication is required' },
     401
   )
 
@@ -259,43 +259,6 @@ describe('apiClient', () => {
     expect(refresh).toHaveBeenCalledWith('shared-refresh')
   })
 
-  it('also refreshes when the backend returns custom code 40111', async () => {
-    useAuthStore
-      .getState()
-      .auth.establishSession(authTokens('expired-access', 'current-refresh'))
-    const refresh = vi.fn(async () =>
-      authTokens('new-access', 'current-refresh')
-    )
-    configureTokenRefresh(refresh)
-
-    let attempts = 0
-    const adapter: AxiosAdapter = async (config) => {
-      attempts += 1
-      if (attempts === 1) {
-        return createResponse(config, {
-          code: 40111,
-          data: {},
-          message: 'Access token expired',
-        })
-      }
-
-      expect(config.headers.get('Authorization')).toBe('Bearer new-access')
-      return createResponse(config, {
-        code: 0,
-        data: { recovered: true },
-        message: 'success',
-      })
-    }
-
-    await expect(
-      sendAuthenticatedRequest<{ recovered: boolean }>({
-        url: '/protected',
-        adapter,
-      })
-    ).resolves.toEqual({ recovered: true })
-    expect(refresh).toHaveBeenCalledOnce()
-  })
-
   it('shares one refresh attempt across concurrent expired requests', async () => {
     useAuthStore
       .getState()
@@ -307,11 +270,7 @@ describe('apiClient', () => {
 
     const adapter: AxiosAdapter = async (config) => {
       if (config.headers.get('Authorization') === 'Bearer expired-access') {
-        return createResponse(config, {
-          code: 40111,
-          data: {},
-          message: 'Access token expired',
-        })
+        throw unauthorized(config)
       }
 
       return createResponse(config, {
@@ -333,7 +292,7 @@ describe('apiClient', () => {
     ])
 
     await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
-    refreshAttempt.resolve(authTokens('new-access', 'current-refresh'))
+    refreshAttempt.resolve(authTokens('new-access', 'rotated-refresh'))
 
     await expect(requests).resolves.toEqual([
       { recovered: true },
@@ -349,12 +308,9 @@ describe('apiClient', () => {
     const refreshAttempt = createDeferred<AuthTokens>()
     const refresh = vi.fn(() => refreshAttempt.promise)
     configureTokenRefresh(refresh)
-    const adapter: AxiosAdapter = async (config) =>
-      createResponse(config, {
-        code: 40111,
-        data: {},
-        message: 'Access token expired',
-      })
+    const adapter: AxiosAdapter = async (config) => {
+      throw unauthorized(config)
+    }
 
     const protectedRequest = sendAuthenticatedRequest({
       url: '/protected',
@@ -364,17 +320,17 @@ describe('apiClient', () => {
     localStorage.removeItem(AUTH_STORAGE_KEY)
     refreshAttempt.resolve(authTokens('late-access', 'current-refresh'))
 
-    await expect(protectedRequest).rejects.toBeInstanceOf(ApiError)
-    expect(useAuthStore.getState().auth.accessToken).toBe('expired-access')
+    await expect(protectedRequest).rejects.toBeInstanceOf(StaleAuthSessionError)
+    expect(useAuthStore.getState().auth.accessToken).toBe('')
     expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull()
   })
 
-  it('does not refresh again for an expired response that arrives after rotation', async () => {
+  it('retries a delayed 401 response after refresh token rotation', async () => {
     useAuthStore
       .getState()
       .auth.establishSession(authTokens('expired-access', 'current-refresh'))
     const refresh = vi.fn(async () =>
-      authTokens('new-access', 'current-refresh')
+      authTokens('new-access', 'rotated-refresh')
     )
     configureTokenRefresh(refresh)
 
@@ -389,11 +345,7 @@ describe('apiClient', () => {
       }
 
       if (authorization === 'Bearer expired-access') {
-        return createResponse(config, {
-          code: 40111,
-          data: {},
-          message: 'Access token expired',
-        })
+        throw unauthorized(config)
       }
 
       return createResponse(config, {
@@ -437,6 +389,128 @@ describe('apiClient', () => {
     })
   })
 
+  it("uses another tab's completed rotation when its own refresh loses the race", async () => {
+    useAuthStore
+      .getState()
+      .auth.establishSession(authTokens('old-access', 'old-refresh'))
+    const pending = createDeferred<void>()
+    const refresh = vi.fn(async () => {
+      await publicApiClient.get('/refresh', {
+        adapter: async (config) => {
+          await pending.promise
+          throw unauthorized(config)
+        },
+      })
+      return authTokens('unused', 'unused')
+    })
+    configureTokenRefresh(refresh)
+    const adapter: AxiosAdapter = async (config) => {
+      if (config.headers.get('Authorization') === 'Bearer old-access')
+        throw unauthorized(config)
+      return createResponse(config, {
+        code: 0,
+        data: 'recovered',
+        message: 'success',
+      })
+    }
+    const request = sendAuthenticatedRequest({ url: '/protected', adapter })
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
+    localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({
+        version: 3,
+        sessionId: useAuthStore.getState().auth.sessionId,
+        ...authTokens('shared-access', 'shared-refresh'),
+      })
+    )
+    pending.resolve()
+    await expect(request).resolves.toBe('recovered')
+    expect(useAuthStore.getState().auth.isSessionExpired).toBe(false)
+  })
+
+  it('expires the current session when its refresh token is rejected', async () => {
+    useAuthStore
+      .getState()
+      .auth.establishSession(authTokens('expired-access', 'invalid-refresh'))
+    configureTokenRefresh(async () => {
+      await publicApiClient.get('/refresh', {
+        adapter: async (config) => {
+          throw unauthorized(config)
+        },
+      })
+      return authTokens('unused', 'unused')
+    })
+    await expect(
+      sendAuthenticatedRequest({
+        url: '/protected',
+        adapter: async (config) => {
+          throw unauthorized(config)
+        },
+      })
+    ).rejects.toBeInstanceOf(ApiError)
+    expect(useAuthStore.getState().auth).toMatchObject({
+      accessToken: '',
+      refreshToken: '',
+      isSessionExpired: true,
+    })
+  })
+
+  it.each([200, 401])(
+    'isolates a new account refresh from the previous account pending refresh (%s)',
+    async (status) => {
+      useAuthStore
+        .getState()
+        .auth.establishSession(authTokens('old-access', 'old-refresh'))
+      const oldRefresh = createDeferred<void>()
+      const refresh = vi.fn(async (refreshToken: string) => {
+        if (refreshToken === 'old-refresh') {
+          await publicApiClient.get('/refresh', {
+            adapter: async (config) => {
+              await oldRefresh.promise
+              if (status === 401) throw unauthorized(config)
+              return createResponse(config, {
+                code: 0,
+                data: null,
+                message: 'success',
+              })
+            },
+          })
+          return authTokens('late-old-access', 'late-old-refresh')
+        }
+        return authTokens('new-access', 'rotated-new-refresh')
+      })
+      configureTokenRefresh(refresh)
+      const adapter: AxiosAdapter = async (config) => {
+        if (config.headers.get('Authorization') !== 'Bearer new-access')
+          throw unauthorized(config)
+        return createResponse(config, {
+          code: 0,
+          data: 'new account',
+          message: 'success',
+        })
+      }
+      const oldRequest = sendAuthenticatedRequest({
+        url: '/protected',
+        adapter,
+      })
+      await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
+      useAuthStore
+        .getState()
+        .auth.establishSession(authTokens('new-expired-access', 'new-refresh'))
+      await expect(
+        sendAuthenticatedRequest({ url: '/protected', adapter })
+      ).resolves.toBe('new account')
+      expect(refresh).toHaveBeenCalledTimes(2)
+      oldRefresh.resolve()
+      await expect(oldRequest).rejects.toBeInstanceOf(StaleAuthSessionError)
+      expect(useAuthStore.getState().auth).toMatchObject({
+        accessToken: 'new-access',
+        refreshToken: 'rotated-new-refresh',
+        isSessionExpired: false,
+      })
+    }
+  )
+
   it('preserves the persisted session after a transient refresh failure', async () => {
     useAuthStore
       .getState()
@@ -457,42 +531,51 @@ describe('apiClient', () => {
     expect(localStorage.getItem(AUTH_STORAGE_KEY)).toContain('current-refresh')
   })
 
-  it('never replays a stale request after a new session is established', async () => {
-    const auth = useAuthStore.getState().auth
-    auth.establishSession(authTokens('old-access', 'old-refresh'))
-    const oldResponse = createDeferred<void>()
-    const requestStarted = createDeferred<void>()
-    const refresh = vi.fn(async () =>
-      authTokens('unused-access', 'unused-refresh')
-    )
-    configureTokenRefresh(refresh)
+  it.each([200, 401])(
+    'rejects a stale %s response after a new session is established',
+    async (status) => {
+      const auth = useAuthStore.getState().auth
+      auth.establishSession(authTokens('old-access', 'old-refresh'))
+      const oldResponse = createDeferred<void>()
+      const requestStarted = createDeferred<void>()
+      const refresh = vi.fn(async () =>
+        authTokens('unused-access', 'unused-refresh')
+      )
+      configureTokenRefresh(refresh)
 
-    const adapter: AxiosAdapter = vi.fn(async (config) => {
-      requestStarted.resolve()
-      await oldResponse.promise
-      throw unauthorized(config)
-    })
-    const requestFromOldSession = sendAuthenticatedRequest({
-      url: '/protected',
-      adapter,
-    })
+      const adapter: AxiosAdapter = vi.fn(async (config) => {
+        requestStarted.resolve()
+        await oldResponse.promise
+        if (status === 200)
+          return createResponse(config, {
+            code: 0,
+            data: { private: true },
+            message: 'success',
+          })
+        throw unauthorized(config)
+      })
+      const requestFromOldSession = sendAuthenticatedRequest({
+        url: '/protected',
+        adapter,
+      })
 
-    await requestStarted.promise
-    useAuthStore
-      .getState()
-      .auth.establishSession(authTokens('new-access', 'new-refresh'))
-    oldResponse.resolve()
+      await requestStarted.promise
+      useAuthStore
+        .getState()
+        .auth.establishSession(authTokens('new-access', 'new-refresh'))
+      oldResponse.resolve()
 
-    await expect(requestFromOldSession).rejects.toBeInstanceOf(
-      StaleAuthSessionError
-    )
-    expect(adapter).toHaveBeenCalledOnce()
-    expect(refresh).not.toHaveBeenCalled()
-    expect(useAuthStore.getState().auth).toMatchObject({
-      accessToken: 'new-access',
-      refreshToken: 'new-refresh',
-    })
-  })
+      await expect(requestFromOldSession).rejects.toBeInstanceOf(
+        StaleAuthSessionError
+      )
+      expect(adapter).toHaveBeenCalledOnce()
+      expect(refresh).not.toHaveBeenCalled()
+      expect(useAuthStore.getState().auth).toMatchObject({
+        accessToken: 'new-access',
+        refreshToken: 'new-refresh',
+      })
+    }
+  )
 
   it('never replays a stale request after another tab replaces the session', async () => {
     useAuthStore

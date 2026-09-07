@@ -28,9 +28,6 @@ vi.mock('@/features/auth/data/session', () => ({
 }))
 
 vi.mock('@/stores/auth-store', () => ({
-  getPersistedAccessToken: () => '',
-  getPersistedRefreshToken: () => '',
-  isPersistedAuthSessionCurrent: () => true,
   useAuthStore: Object.assign(
     () => ({ auth: { establishSession: establishSessionMock } }),
     {

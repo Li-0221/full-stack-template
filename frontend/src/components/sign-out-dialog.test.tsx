@@ -15,9 +15,6 @@ const { handleServerError, navigate, reset, revokeSession } = vi.hoisted(
 const MOCK_HREF = 'https://app.test/dashboard?tab=1'
 
 vi.mock('@/stores/auth-store', () => ({
-  getPersistedAccessToken: () => '',
-  getPersistedRefreshToken: () => 'refresh-token',
-  isPersistedAuthSessionCurrent: () => true,
   useAuthStore: Object.assign(
     () => ({ auth: { refreshToken: 'refresh-token', reset } }),
     {

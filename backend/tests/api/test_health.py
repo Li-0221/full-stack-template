@@ -5,6 +5,24 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
+def test_error_schema_matches_real_validation_and_authentication_responses(
+    client: TestClient,
+) -> None:
+    schema = client.get("/api/v1/openapi.json").json()
+    for path, method, response in [
+        ("/api/v1/auth/session", "post", client.post("/api/v1/auth/session", json={})),
+        ("/api/v1/users/me", "get", client.get("/api/v1/users/me")),
+    ]:
+        declared = schema["paths"][path][method]["responses"][str(response.status_code)]
+        assert declared["content"]["application/json"]["schema"] == {
+            "$ref": "#/components/schemas/ErrorResponse"
+        }
+        assert set(response.json()) == {"code", "data", "message"}
+        assert response.json()["code"] > 0
+        assert response.json()["data"] is None
+    assert "HTTPValidationError" not in schema["components"]["schemas"]
+
+
 def test_health_check(client: TestClient) -> None:
     response = client.get("/api/v1/health")
 

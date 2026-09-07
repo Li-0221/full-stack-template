@@ -42,7 +42,7 @@ make setup
 make dev
 ```
 
-`make setup` 会从 `.env.example` 创建唯一的根目录 `.env`。本地开发和 Docker Compose 使用相同的变量结构；不同环境只替换变量值，不在 `backend` 或 `frontend` 下维护第二份配置。
+`APP_SECRET_KEY` 固定配置在根目录 `.env` 中，启动时读取，不会自动生成或替换。`make setup` 只在 `.env` 不存在时从 `.env.example` 复制，已有文件保持原样；也可单独运行 `make setup-env`。本地开发和 Docker Compose 使用相同的变量结构；不同环境只替换变量值，不在 `backend` 或 `frontend` 下维护第二份配置。
 
 `make dev` 只在 Docker 中启动 PostgreSQL，并由 Make 在本机并行启动前后端。后端完成数据库 migration 后通过 `uvicorn --reload` 运行，前端通过 `pnpm dev` 启动 Vite。修改代码后会自动重载或热更新：
 
@@ -50,6 +50,8 @@ Backend 开发脚本自行解析根 `.env`；Vite 通过 `envDir` 原生读取�
 
 - 前端：<http://localhost:5176>
 - Swagger UI：<http://localhost:8000/docs>
+
+在另一个终端从仓库根目录执行 `make admin` 创建管理员；`make migrate` 升级数据库，`make migrate ARGS="check"` 检查迁移一致性。这些命令与 `make dev-backend` 共用配置加载和容器数据库地址转换。
 
 按 `Ctrl+C` 会停止前后端开发进程，PostgreSQL 会继续运行以保留开发数据；使用 `make down` 停止它。完整容器编排可使用：
 
@@ -87,6 +89,8 @@ pnpm test:e2e
 ```
 
 E2E 凭据只通过当前 shell 传入。
+
+认证过期 E2E 需在独立测试环境将后端 `APP_ACCESS_TOKEN_EXPIRE_MINUTES` 设为 `1`，重启后端，再为测试设置 `E2E_VERIFY_REFRESH=1`。它会等待真实 token 过期，检查 refresh token 轮换和原请求重试；默认不运行这项约一分钟的测试。
 
 ## 部署配置
 

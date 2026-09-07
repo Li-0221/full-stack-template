@@ -10,6 +10,32 @@ from app.scripts import create_superuser
 type CreateUserCall = tuple[str, str | None, str, bool, bool]
 
 
+@pytest.mark.parametrize(
+    ("email", "password"),
+    [
+        ("not-an-email", "valid-password"),
+        ("admin@example.com", "x"),
+        ("admin@example.com", "x" * 129),
+    ],
+)
+def test_invalid_input_is_rejected_before_opening_database(
+    monkeypatch: pytest.MonkeyPatch,
+    email: str,
+    password: str,
+) -> None:
+    answers = iter([email, "Admin"])
+    monkeypatch.setattr("builtins.input", lambda prompt: next(answers))
+    monkeypatch.setattr(create_superuser, "getpass", lambda prompt: password)
+
+    def unexpected_database_call() -> None:
+        pytest.fail("Invalid input reached the database")
+
+    monkeypatch.setattr(create_superuser, "get_database_manager", unexpected_database_call)
+    with pytest.raises(SystemExit) as error:
+        create_superuser.main()
+    assert password not in str(error.value)
+
+
 def test_main_creates_active_superuser(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

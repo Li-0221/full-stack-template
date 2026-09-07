@@ -15,7 +15,7 @@ docker compose up -d --wait db
 make dev-backend
 ```
 
-`scripts/backend_dev.py` 会自行解析根目录 `.env`、把容器数据库地址转换为宿主机地址、执行 migration，并启动带热更新的 Uvicorn。Makefile 不负责注入配置；不要用 shell `source` 加载包含 JSON 值的环境文件。
+`scripts/backend.py` 为开发服务、管理员 CLI 和 Alembic 共用根目录 `.env`，仅把容器数据库主机 `db` 转换为宿主机地址；显式指定的外部数据库地址保持原样。开发启动时执行 migration，再运行带热更新的 Uvicorn。不要用 shell `source` 加载包含 JSON 值的环境文件。
 
 本机后端端口与 Compose 暴露端口统一使用根 `.env` 中的 `BACKEND_PORT`，默认是 `8000`。
 
@@ -25,10 +25,10 @@ make dev-backend
 
 `APP_SECRET_KEY` 至少 32 个字符。`.env` 已被 Git 忽略，不要提交。
 
-创建管理员：
+从仓库根目录创建管理员：
 
 ```bash
-uv run python -m app.scripts.create_superuser
+make admin
 ```
 
 ## API 契约
@@ -56,13 +56,13 @@ refresh token 仅以 hash 保存并原子轮换，轮换后的旧 token 无法�
 
 ## Migration
 
-模型变更应新增 revision，不修改已经执行过的 migration：
+模型变更应新增 revision，不修改已经执行过的 migration。从仓库根目录执行：
 
 ```bash
-uv run alembic heads
-uv run alembic revision --autogenerate -m "describe the schema change"
-uv run alembic upgrade head
-uv run alembic check
+make migrate ARGS="heads"
+make migrate ARGS='revision --autogenerate -m "describe the schema change"'
+make migrate
+make migrate ARGS="check"
 ```
 
 生产环境将 migration 作为独立部署步骤，不由每个 API replica 启动时执行。

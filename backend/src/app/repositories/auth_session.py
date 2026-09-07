@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 
@@ -8,22 +7,17 @@ from sqlalchemy.orm import Session
 from app.models.auth_session import AuthSession
 
 
-@dataclass(frozen=True, slots=True)
-class AuthSessionRecordCreate:
-    user_id: UUID
-    refresh_token_hash: str = field(repr=False)
-    expires_at: datetime
-
-
 class AuthSessionRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def create(self, data: AuthSessionRecordCreate) -> AuthSession:
+    def create(
+        self, *, user_id: UUID, refresh_token_hash: str, expires_at: datetime
+    ) -> AuthSession:
         auth_session = AuthSession(
-            user_id=data.user_id,
-            refresh_token_hash=data.refresh_token_hash,
-            expires_at=data.expires_at,
+            user_id=user_id,
+            refresh_token_hash=refresh_token_hash,
+            expires_at=expires_at,
         )
         self.session.add(auth_session)
         self.session.flush()

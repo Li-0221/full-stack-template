@@ -4,22 +4,16 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios'
 import {
-  ACCESS_TOKEN_EXPIRED_CODE,
   API_SUCCESS_CODE,
   type ApiResponse,
   type AuthTokens,
 } from '@/types/api'
-import {
-  getPersistedAccessToken,
-  getPersistedRefreshToken,
-  isPersistedAuthSessionCurrent,
-  useAuthStore,
-} from '@/stores/auth-store'
+import { useAuthStore } from '@/stores/auth-store'
 import { env } from './env'
 
 interface AuthAwareRequestConfig extends InternalAxiosRequestConfig {
   _authRetry?: boolean
-  _authRefreshToken?: string
+  _authSessionId?: string
   _authSessionEpoch?: number
 }
 
@@ -51,6 +45,7 @@ export class StaleAuthSessionError extends Error {
 
 let tokenRefreshHandler: TokenRefreshHandler | null = null
 let refreshPromise: Promise<boolean> | null = null
+let refreshEpoch: number | null = null
 
 export function configureTokenRefresh(handler: TokenRefreshHandler | null) {
   tokenRefreshHandler = handler
@@ -99,7 +94,7 @@ function isRefreshSessionInvalid(error: unknown) {
   return isAxiosError(error) && error.response?.status === 401
 }
 
-async function refreshSession(refreshToken: string) {
+async function refreshSession(refreshToken: string, epoch: number) {
   const handler = tokenRefreshHandler
   if (!handler) return false
 
@@ -109,31 +104,33 @@ async function refreshSession(refreshToken: string) {
       throw new Error('Token refresh returned an incomplete session')
     }
 
-    const auth = useAuthStore.getState().auth
-    if (!isPersistedAuthSessionCurrent(refreshToken)) {
+    const auth = useAuthStore.getState().auth.syncFromStorage()
+    if (auth.sessionEpoch !== epoch || auth.refreshToken !== refreshToken) {
       return false
     }
 
     auth.refreshSession(tokens)
     return true
   } catch (error) {
-    const auth = useAuthStore.getState().auth
-    if (
-      isPersistedAuthSessionCurrent(refreshToken) &&
-      isRefreshSessionInvalid(error)
-    ) {
-      auth.expire()
-      return false
+    const auth = useAuthStore.getState().auth.syncFromStorage()
+    // Another tab may already have consumed this token and persisted its rotation.
+    if (isRefreshSessionInvalid(error) && auth.sessionEpoch === epoch) {
+      if (auth.refreshToken && auth.refreshToken !== refreshToken) return true
+      if (auth.refreshToken === refreshToken) {
+        auth.expire()
+        return false
+      }
     }
     throw normalizeRequestError(error)
   }
 }
 
-function getRefreshPromise(refreshToken: string) {
-  if (refreshPromise) return refreshPromise
+function getRefreshPromise(refreshToken: string, epoch: number) {
+  if (refreshPromise && refreshEpoch === epoch) return refreshPromise
 
-  const attempt = refreshSession(refreshToken)
+  const attempt = refreshSession(refreshToken, epoch)
   refreshPromise = attempt
+  refreshEpoch = epoch
   const clearRefreshPromise = () => {
     if (refreshPromise === attempt) refreshPromise = null
   }
@@ -159,30 +156,22 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const authConfig = config as AuthAwareRequestConfig
-  const auth = useAuthStore.getState().auth
+  const auth = assertCurrentSession(authConfig)
 
   authConfig._authSessionEpoch ??= auth.sessionEpoch
-  authConfig._authRefreshToken ??=
-    getPersistedRefreshToken() ?? auth.refreshToken
-  const accessToken = getPersistedAccessToken() ?? auth.accessToken
+  authConfig._authSessionId ??= auth.sessionId
+  const accessToken = auth.accessToken
   if (accessToken) {
     config.headers.set('Authorization', `Bearer ${accessToken}`)
+  } else {
+    config.headers.delete('Authorization')
   }
 
   return config
 })
 
-async function retryUnauthorizedRequest(error: unknown) {
-  if (!isAxiosError(error) || error.response?.status !== 401 || !error.config) {
-    return null
-  }
-
-  return retryWithFreshSession(error.config as AuthAwareRequestConfig)
-}
-
-async function retryWithFreshSession(config: AuthAwareRequestConfig) {
-  const auth = useAuthStore.getState().auth
-  const refreshToken = getPersistedRefreshToken() ?? auth.refreshToken
+function assertCurrentSession(config: AuthAwareRequestConfig) {
+  const auth = useAuthStore.getState().auth.syncFromStorage()
   if (
     typeof config._authSessionEpoch === 'number' &&
     config._authSessionEpoch !== auth.sessionEpoch
@@ -190,18 +179,24 @@ async function retryWithFreshSession(config: AuthAwareRequestConfig) {
     throw new StaleAuthSessionError(config._authSessionEpoch)
   }
   if (
-    typeof config._authRefreshToken === 'string' &&
-    config._authRefreshToken !== refreshToken
+    typeof config._authSessionId === 'string' &&
+    config._authSessionId !== auth.sessionId
   ) {
     throw new StaleAuthSessionError(
       config._authSessionEpoch ?? auth.sessionEpoch
     )
   }
+  return auth
+}
+
+async function retryWithFreshSession(config: AuthAwareRequestConfig) {
+  const auth = assertCurrentSession(config)
+  const refreshToken = auth.refreshToken
 
   if (config._authRetry) return null
 
   const requestAuthorization = config.headers.get('Authorization')
-  const currentAccessToken = getPersistedAccessToken() ?? auth.accessToken
+  const currentAccessToken = auth.accessToken
   const currentAuthorization = currentAccessToken
     ? `Bearer ${currentAccessToken}`
     : null
@@ -215,7 +210,6 @@ async function retryWithFreshSession(config: AuthAwareRequestConfig) {
     requestAuthorization !== currentAuthorization
   ) {
     config._authRetry = true
-    config.headers.set('Authorization', currentAuthorization)
     return apiClient.request(config)
   }
 
@@ -225,31 +219,32 @@ async function retryWithFreshSession(config: AuthAwareRequestConfig) {
   }
 
   config._authRetry = true
-  const refreshed = await getRefreshPromise(refreshToken)
+  let refreshed: boolean
+  try {
+    refreshed = await getRefreshPromise(refreshToken, auth.sessionEpoch)
+  } finally {
+    if (!useAuthStore.getState().auth.isSessionExpired)
+      assertCurrentSession(config)
+  }
   if (!refreshed) return null
-
-  const accessToken =
-    getPersistedAccessToken() ?? useAuthStore.getState().auth.accessToken
-  config.headers.set('Authorization', `Bearer ${accessToken}`)
   return apiClient.request(config)
 }
 
 apiClient.interceptors.response.use(
-  async (response) => {
-    if (!isApiResponse(response.data)) return response
-
-    if (response.data.code === ACCESS_TOKEN_EXPIRED_CODE) {
-      const retryResponse = await retryWithFreshSession(
-        response.config as AuthAwareRequestConfig
-      )
-      if (retryResponse) return retryResponse
-    }
-
+  (response) => {
+    assertCurrentSession(response.config as AuthAwareRequestConfig)
     return ensureSuccessfulApiResponse(response)
   },
   async (error: unknown) => {
-    const retryResponse = await retryUnauthorizedRequest(error)
-    if (retryResponse) return retryResponse
+    if (isAxiosError(error) && error.config) {
+      const config = error.config as AuthAwareRequestConfig
+      if (error.response?.status === 401) {
+        const retryResponse = await retryWithFreshSession(config)
+        if (retryResponse) return retryResponse
+      } else {
+        assertCurrentSession(config)
+      }
+    }
 
     return Promise.reject(normalizeRequestError(error))
   }
