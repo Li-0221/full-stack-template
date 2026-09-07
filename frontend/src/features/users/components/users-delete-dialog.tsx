@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { handleServerError } from '@/lib/handle-server-error'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,6 +23,12 @@ export function UsersDeleteDialog({
   const queryClient = useQueryClient()
   const deleteMutation = useMutation({
     mutationFn: () => deleteUser(currentRow.id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
+      toast.success('User deleted.')
+      setConfirmation('')
+      onOpenChange(false)
+    },
   })
   const isConfirmed = confirmation.trim() === currentRow.email
 
@@ -33,18 +38,9 @@ export function UsersDeleteDialog({
     onOpenChange(nextOpen)
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!isConfirmed || deleteMutation.isPending) return
-
-    try {
-      await deleteMutation.mutateAsync()
-      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
-      toast.success('User deleted.')
-      setConfirmation('')
-      onOpenChange(false)
-    } catch (error) {
-      handleServerError(error)
-    }
+    deleteMutation.mutate()
   }
 
   return (
@@ -69,7 +65,7 @@ export function UsersDeleteDialog({
           id='users-delete-form'
           onSubmit={(event) => {
             event.preventDefault()
-            void handleDelete()
+            handleDelete()
           }}
           className='space-y-4'
         >

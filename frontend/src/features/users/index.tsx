@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { ConfigDrawer } from '@/components/config-drawer'
+import { ServerDataTable } from '@/components/data-table'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { usersColumns } from './components/users-columns'
 import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersProvider } from './components/users-provider'
-import { UsersTable } from './components/users-table'
 import { usersQueryOptions } from './data/users-api'
 
 const route = getRouteApi('/_authenticated/users/')
@@ -40,14 +41,20 @@ export function Users() {
           </div>
           <UsersPrimaryButtons />
         </div>
-        <UsersTable
+        <ServerDataTable
           pageData={usersQuery.data}
+          columns={usersColumns}
           search={search}
           navigate={navigate}
           isLoading={usersQuery.isLoading}
           isRefreshing={usersQuery.isFetching && !usersQuery.isLoading}
           isPlaceholderData={usersQuery.isPlaceholderData}
           error={usersQuery.error}
+          loadingLabel='Loading users...'
+          errorLabel='Unable to load users.'
+          emptyLabel='No users found.'
+          ariaLabel='Users'
+          getRowId={(user) => user.id}
           onRetry={() => void usersQuery.refetch()}
           onRefresh={() => void usersQuery.refetch()}
         />

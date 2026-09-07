@@ -1,4 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
+import { appConfig } from '@/config/app'
+import { Logo } from '@/assets/logo'
 import { filterNavigationByAccess } from '@/lib/router-access'
 import { useLayout } from '@/context/layout-provider'
 import {
@@ -6,17 +9,20 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { currentUserQueryOptions } from '@/features/auth/data/current-user-api'
-// import { AppTitle } from './app-title'
 import { sidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
-import { TeamSwitcher } from './team-switcher'
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
+  const { setOpenMobile } = useSidebar()
   const currentUserQuery = useQuery(currentUserQueryOptions())
   const navGroups = filterNavigationByAccess(
     sidebarData.navGroups,
@@ -25,11 +31,28 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
-        <TeamSwitcher teams={sidebarData.teams} />
-
-        {/* Replace <TeamSwitch /> with the following <AppTitle />
-         /* if you want to use the normal app title instead of TeamSwitch dropdown */}
-        {/* <AppTitle /> */}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size='lg' asChild>
+              <Link to='/' onClick={() => setOpenMobile(false)}>
+                <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
+                  <Logo
+                    className='size-4 text-sidebar-primary-foreground'
+                    aria-hidden='true'
+                  />
+                </div>
+                <div className='grid min-w-0 flex-1 text-start text-sm leading-tight'>
+                  <span className='truncate font-semibold'>
+                    {appConfig.name}
+                  </span>
+                  <span className='truncate text-xs'>
+                    {appConfig.description}
+                  </span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         {navGroups.map((props) => (

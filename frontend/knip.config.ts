@@ -10,7 +10,6 @@ const config: KnipConfig = {
   ignore: [
     'src/client/**',
     'src/components/ui/**',
-    'src/components/layout/app-title.tsx',
     'src/tanstack-table.d.ts',
     'public/env-config.js',
   ],

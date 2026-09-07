@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { UserCreateRequest, UserPutRequest } from '@/client'
 import { toast } from 'sonner'
-import { handleServerError } from '@/lib/handle-server-error'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -145,18 +144,16 @@ export function UsersActionDialog({
       }
       return updateUser(currentRow.id, request)
     },
-  })
-
-  async function onSubmit(values: UserForm) {
-    try {
-      await saveMutation.mutateAsync(values)
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: usersQueryKey })
       toast.success(isEdit ? 'User updated.' : 'User created.')
       form.reset(getDefaultValues(currentRow))
       onOpenChange(false)
-    } catch (error) {
-      handleServerError(error)
-    }
+    },
+  })
+
+  function onSubmit(values: UserForm) {
+    saveMutation.mutate(values)
   }
 
   function handleOpenChange(nextOpen: boolean) {

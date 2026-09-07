@@ -17,7 +17,7 @@ type DataTableRowActionsProps = {
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
-  const { setOpen, setCurrentRow } = useUsers()
+  const { setDialog } = useUsers()
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -33,10 +33,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-40'>
         <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(row.original)
-            setOpen('edit')
-          }}
+          onClick={() => setDialog({ type: 'edit', user: row.original })}
         >
           Edit
           <DropdownMenuShortcut>
@@ -45,10 +42,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(row.original)
-            setOpen('delete')
-          }}
+          onClick={() => setDialog({ type: 'delete', user: row.original })}
           className='text-destructive focus:text-destructive'
         >
           Delete

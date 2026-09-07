@@ -25,7 +25,6 @@ export {
   Menu,
   Moon,
   PanelLeftIcon,
-  Plus,
   RefreshCw,
   RotateCcw,
   SearchIcon,

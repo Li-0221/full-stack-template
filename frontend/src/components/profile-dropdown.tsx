@@ -1,7 +1,7 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { getDisplayNameInitials } from '@/lib/utils'
-import useDialogState from '@/hooks/use-dialog-state'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,7 +18,7 @@ import { SignOutDialog } from '@/components/sign-out-dialog'
 import { currentUserQueryOptions } from '@/features/auth/data/current-user-api'
 
 export function ProfileDropdown() {
-  const [open, setOpen] = useDialogState()
+  const [open, setOpen] = useState(false)
   const currentUserQuery = useQuery(currentUserQueryOptions())
   const user = currentUserQuery.data
   const name = user?.fullName || user?.email || 'Account'
@@ -69,7 +69,7 @@ export function ProfileDropdown() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <SignOutDialog open={!!open} onOpenChange={setOpen} />
+      <SignOutDialog open={open} onOpenChange={setOpen} />
     </>
   )
 }

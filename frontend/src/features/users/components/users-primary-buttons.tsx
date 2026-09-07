@@ -3,9 +3,9 @@ import { UserPlus } from '@/components/icons'
 import { useUsers } from './users-provider'
 
 export function UsersPrimaryButtons() {
-  const { setOpen } = useUsers()
+  const { setDialog } = useUsers()
   return (
-    <Button onClick={() => setOpen('add')}>
+    <Button onClick={() => setDialog({ type: 'add' })}>
       <UserPlus aria-hidden='true' />
       Add user
     </Button>

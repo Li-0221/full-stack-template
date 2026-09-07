@@ -16,10 +16,7 @@ class CamelModel(BaseModel):
 class RequestModel(CamelModel):
     # HTTP 入站只接受 alias(camelCase), 不把 Python 字段名当作备用 wire contract。
     model_config = ConfigDict(
-        alias_generator=to_camel,
         extra="forbid",
-        serialize_by_alias=True,
-        validate_by_alias=True,
         validate_by_name=False,
     )
 

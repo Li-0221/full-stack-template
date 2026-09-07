@@ -1,12 +1,6 @@
 import { type LinkProps } from '@tanstack/react-router'
 import type { RouteAccessRule } from '@/lib/router-access'
 
-type Team = {
-  name: string
-  logo: React.ElementType
-  plan: string
-}
-
 type BaseNavItem = {
   title: string
   badge?: string
@@ -32,7 +26,6 @@ type NavGroup = {
 }
 
 type SidebarData = {
-  teams: Team[]
   navGroups: NavGroup[]
 }
 

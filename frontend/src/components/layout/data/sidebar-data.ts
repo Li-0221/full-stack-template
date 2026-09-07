@@ -1,5 +1,3 @@
-import { appConfig } from '@/config/app'
-import { Logo } from '@/assets/logo'
 import { routeAccessRules } from '@/lib/router-access'
 import {
   LayoutDashboard,
@@ -11,13 +9,6 @@ import {
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
-  teams: [
-    {
-      name: appConfig.defaultOrganization.name,
-      logo: Logo,
-      plan: appConfig.defaultOrganization.description,
-    },
-  ],
   navGroups: [
     {
       title: 'General',

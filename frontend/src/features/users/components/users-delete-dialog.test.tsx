@@ -33,7 +33,7 @@ function renderDialog(onOpenChange = vi.fn()) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
-      mutations: { retry: false },
+      mutations: { retry: false, onError: (error) => handleServerError(error) },
     },
   })
 
@@ -91,6 +91,7 @@ describe('UsersDeleteDialog', () => {
     await vi.waitFor(() =>
       expect(handleServerError).toHaveBeenCalledWith(error)
     )
+    expect(handleServerError).toHaveBeenCalledTimes(1)
     expect(onOpenChange).not.toHaveBeenCalled()
   })
 })

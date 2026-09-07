@@ -1,27 +1,22 @@
 import React, { useState } from 'react'
-import useDialogState from '@/hooks/use-dialog-state'
 import type { User } from '../data/users-api'
 
-type UsersDialogType = 'add' | 'edit' | 'delete'
+type UsersDialogState =
+  | null
+  | { type: 'add' }
+  | { type: 'edit' | 'delete'; user: User }
 
 type UsersContextType = {
-  open: UsersDialogType | null
-  setOpen: (str: UsersDialogType | null) => void
-  currentRow: User | null
-  setCurrentRow: React.Dispatch<React.SetStateAction<User | null>>
+  dialog: UsersDialogState
+  setDialog: React.Dispatch<React.SetStateAction<UsersDialogState>>
 }
 
 const UsersContext = React.createContext<UsersContextType | null>(null)
 
 export function UsersProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useDialogState<UsersDialogType>(null)
-  const [currentRow, setCurrentRow] = useState<User | null>(null)
+  const [dialog, setDialog] = useState<UsersDialogState>(null)
 
-  return (
-    <UsersContext value={{ open, setOpen, currentRow, setCurrentRow }}>
-      {children}
-    </UsersContext>
-  )
+  return <UsersContext value={{ dialog, setDialog }}>{children}</UsersContext>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

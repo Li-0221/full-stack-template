@@ -1,7 +1,7 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { getDisplayNameInitials } from '@/lib/utils'
-import useDialogState from '@/hooks/use-dialog-state'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ import { currentUserQueryOptions } from '@/features/auth/data/current-user-api'
 
 export function NavUser() {
   const { isMobile } = useSidebar()
-  const [open, setOpen] = useDialogState()
+  const [open, setOpen] = useState(false)
   const currentUserQuery = useQuery(currentUserQueryOptions())
   const user = currentUserQuery.data
   const name = user?.fullName || user?.email || 'Account'
@@ -105,7 +105,7 @@ export function NavUser() {
         </SidebarMenuItem>
       </SidebarMenu>
 
-      <SignOutDialog open={!!open} onOpenChange={setOpen} />
+      <SignOutDialog open={open} onOpenChange={setOpen} />
     </>
   )
 }
