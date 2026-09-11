@@ -68,12 +68,6 @@ make migrate ARGS="check"
 
 ## 检查
 
-```bash
-uv run ruff format --check .
-uv run ruff check .
-uv run mypy src
-uv run pytest --cov=app --cov-report=term-missing
-uv run pre-commit run --all-files
-```
+从仓库根目录运行 `make check` 做日常检查；`make check-backend` 运行后端完整检查。只验证某个功能时，可在 backend 目录运行 `uv run pytest tests/api/test_users.py` 等相关测试。
 
 数据库集成测试使用 Testcontainers，需要可用的 Docker daemon。

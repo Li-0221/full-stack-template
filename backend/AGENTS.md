@@ -41,7 +41,6 @@ uv run ruff format --check .
 uv run ruff check .
 uv run mypy src
 uv run pytest --cov=app --cov-report=term-missing
-uv run pre-commit run --all-files
 uv run alembic check
 ```
 

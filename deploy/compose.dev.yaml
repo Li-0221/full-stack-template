@@ -1,5 +1,5 @@
 # 在服务器仓库根目录通过 make deploy-dev 执行。
-name: full-stack-template-dev
+name: ${PROJECT_NAME:?set PROJECT_NAME}-dev
 
 services:
   db:
