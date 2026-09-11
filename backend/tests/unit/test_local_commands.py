@@ -21,7 +21,7 @@ def local_commands(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ModuleTyp
     monkeypatch.delenv("POSTGRES_PORT", raising=False)
     (tmp_path / ".env.example").write_text(
         "APP_SECRET_KEY=fixed-local-test-secret-key-123456\n"
-        "APP_DATABASE_URL=postgresql+psycopg://app:app@db:5432/app\n"
+        "APP_DATABASE_URL=postgresql+psycopg://app:app@dev.example.com:54322/app?sslmode=disable\n"
         'POSTGRES_PORT=5544\nAPP_CORS_ORIGINS=["http://localhost:5176"]\n'
     )
     return module
@@ -36,7 +36,10 @@ def test_setup_copies_fixed_configuration_without_regenerating_it(
     local_commands.setup_environment()
     assert dotenv_values(local_commands.ROOT_ENV_FILE) == first
     environment = local_commands.build_environment()
-    assert environment["APP_DATABASE_URL"] == "postgresql+psycopg://app:app@127.0.0.1:5544/app"
+    assert (
+        environment["APP_DATABASE_URL"]
+        == "postgresql+psycopg://app:app@dev.example.com:54322/app?sslmode=disable"
+    )
     assert environment["APP_CORS_ORIGINS"] == '["http://localhost:5176"]'
 
 
@@ -59,7 +62,7 @@ def test_management_commands_use_the_local_environment(
 
     def run(command: list[str], *, cwd: Path, env: dict[str, str]) -> int:
         calls.append(command)
-        assert env["APP_DATABASE_URL"].endswith("@127.0.0.1:5544/app")
+        assert env["APP_DATABASE_URL"].endswith("@dev.example.com:54322/app?sslmode=disable")
         assert env["APP_SECRET_KEY"]
         return 0
 

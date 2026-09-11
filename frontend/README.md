@@ -16,7 +16,7 @@ Vite 通过 `envDir` 原生读取仓库根目录 `.env`；Makefile 不负责注�
 
 运行时配置：
 
-- `VITE_API_BASE_URL`：后端 API 地址
+- API 固定使用同域 `/api/`，本地由 Vite 代理到 `BACKEND_PORT`（默认 8000），部署由服务器 Nginx 转发
 - `VITE_APP_BASE_PATH`：部署路径，例如 `/` 或 `/admin`
 - `VITE_DEV_PORT`：本地开发端口，默认 `5176`
 
@@ -59,7 +59,6 @@ pnpm test:e2e
 ```bash
 docker build -t full-stack-template-frontend .
 docker run --rm -p 3000:3000 \
-  -e VITE_API_BASE_URL=https://api.example.com \
   -e VITE_APP_BASE_PATH=/admin \
   full-stack-template-frontend
 ```

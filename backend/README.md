@@ -4,20 +4,19 @@ FastAPI 后端提供认证、当前用户资料和管理员用户 CRUD。结构�
 
 ## 本地启动
 
-需要 Python 3.12、uv 0.11、Docker 和 PostgreSQL。应用只支持 `postgresql+psycopg`。
+需要 Python 3.12、uv 0.11 和可直连的 dev PostgreSQL。应用只支持 `postgresql+psycopg`。
 
 从仓库根目录执行：
 
 ```bash
 make setup
-# 编辑根目录 .env，填写当前环境配置
-docker compose up -d --wait db
+# 编辑根目录 .env，填写 dev 服务器 APP_DATABASE_URL（sslmode=disable）
 make dev-backend
 ```
 
-`scripts/backend.py` 为开发服务、管理员 CLI 和 Alembic 共用根目录 `.env`，仅把容器数据库主机 `db` 转换为宿主机地址；显式指定的外部数据库地址保持原样。开发启动时执行 migration，再运行带热更新的 Uvicorn。不要用 shell `source` 加载包含 JSON 值的环境文件。
+`scripts/backend.py` 为开发服务、管理员 CLI 和 Alembic 共用根目录 `.env`，直接使用配置的数据库地址，不做容器主机名转换。开发启动时执行 migration，再运行带热更新的 Uvicorn。不要用 shell `source` 加载包含 JSON 值的环境文件。
 
-本机后端端口与 Compose 暴露端口统一使用根 `.env` 中的 `BACKEND_PORT`，默认是 `8000`。
+本机后端端口使用根 `.env` 中的 `BACKEND_PORT`，默认 `8000`；服务器部署分别读取 `deploy/.env.dev` 和 `deploy/.env.prod`。本地启动、migration 和管理员 CLI 均操作共享 dev 数据库，不启动本机 PostgreSQL。
 
 - Swagger UI：<http://127.0.0.1:8000/docs>
 - ReDoc：<http://127.0.0.1:8000/redoc>

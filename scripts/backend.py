@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 
 from dotenv import dotenv_values
-from sqlalchemy.engine import make_url
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 BACKEND_DIR = ROOT_DIR / "backend"
@@ -32,16 +31,8 @@ def build_environment() -> dict[str, str]:
     }
     environment = {**file_values, **os.environ}
 
-    compose_url = environment.get("APP_DATABASE_URL")
-    if not compose_url:
+    if not environment.get("APP_DATABASE_URL"):
         raise RuntimeError(MISSING_DATABASE_ERROR)
-    database_url = make_url(compose_url)
-    if database_url.host == "db":
-        database_url = database_url.set(
-            host="127.0.0.1",
-            port=int(environment.get("POSTGRES_PORT", "5432")),
-        )
-    environment["APP_DATABASE_URL"] = database_url.render_as_string(hide_password=False)
     return environment
 
 

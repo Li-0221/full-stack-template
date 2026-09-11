@@ -1,2 +1,7 @@
 .env
 .DS_Store
+
+deploy/.env.dev
+deploy/.env.prod
+deploy/backups/
+deploy/.deploy-*.lock

@@ -16,7 +16,6 @@ import { bindAuthSessionEffects } from '@/lib/auth-session-effects'
 import { env } from '@/lib/env'
 import { handleServerError } from '@/lib/handle-server-error'
 import { refreshSession } from '@/features/auth/data/session'
-import { DirectionProvider } from './context/direction-provider'
 import { ThemeProvider } from './context/theme-provider'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
@@ -134,9 +133,7 @@ if (!rootElement.innerHTML) {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <DirectionProvider>
-            <RouterProvider router={router} />
-          </DirectionProvider>
+          <RouterProvider router={router} />
         </ThemeProvider>
       </QueryClientProvider>
     </StrictMode>

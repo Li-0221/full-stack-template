@@ -1,8 +1,10 @@
-name: full-stack-template
+# 在服务器仓库根目录通过 make deploy-dev 执行。
+name: full-stack-template-dev
 
 services:
   db:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
@@ -13,21 +15,18 @@ services:
       timeout: 5s
       retries: 10
     ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+      - "0.0.0.0:${POSTGRES_PORT:-54322}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
   backend:
     build:
-      context: ./backend
+      context: ../backend
+    restart: unless-stopped
     environment:
       APP_SECRET_KEY: ${APP_SECRET_KEY:?set APP_SECRET_KEY}
-      APP_DATABASE_URL: ${APP_DATABASE_URL:?set APP_DATABASE_URL}
-      APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:?set APP_CORS_ORIGINS}
-    command:
-      - sh
-      - -c
-      - alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+      APP_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?set POSTGRES_USER}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:?set POSTGRES_DB}?sslmode=disable
+      APP_CORS_ORIGINS: '["${SITE_URL:?set SITE_URL}"]'
     depends_on:
       db:
         condition: service_healthy
@@ -41,20 +40,20 @@ services:
       timeout: 5s
       retries: 10
     ports:
-      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+      - "127.0.0.1:${BACKEND_PORT:-18000}:8000"
 
   frontend:
     build:
-      context: ./frontend
+      context: ../frontend
+    restart: unless-stopped
     environment:
       APP_PORT: 3000
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:?set VITE_API_BASE_URL}
-      VITE_APP_BASE_PATH: ${VITE_APP_BASE_PATH:?set VITE_APP_BASE_PATH}
+      VITE_APP_BASE_PATH: /
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+      - "127.0.0.1:${FRONTEND_PORT:-13000}:3000"
 
 volumes:
   postgres-data:

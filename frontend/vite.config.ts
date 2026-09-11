@@ -23,7 +23,7 @@ function resolveDevPort(value: string | undefined) {
 
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
-  const env = loadEnv(mode, ENV_DIR, 'VITE_')
+  const env = loadEnv(mode, ENV_DIR, ['VITE_', 'BACKEND_PORT'])
   const appBasePath = normalizeBasePath(env.VITE_APP_BASE_PATH)
   const appBuildId = new Date().toISOString()
 
@@ -64,6 +64,12 @@ export default defineConfig(({ command, mode }) => {
     server: {
       host: '0.0.0.0',
       port: resolveDevPort(env.VITE_DEV_PORT),
+      strictPort: true,
+      proxy: {
+        '/api/': {
+          target: `http://127.0.0.1:${env.BACKEND_PORT || '8000'}`,
+        },
+      },
     },
     test: {
       include: ['src/**/*.test.{ts,tsx}'],

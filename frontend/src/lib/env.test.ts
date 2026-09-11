@@ -22,25 +22,23 @@ describe('normalizeAppBasePath', () => {
 
 describe('getRuntimeEnv', () => {
   it('falls back to the build-time value for an undefined placeholder', () => {
-    vi.stubEnv('VITE_API_BASE_URL', 'https://build.example.com')
-    window.__ENV__ = { VITE_API_BASE_URL: undefined }
+    vi.stubEnv('VITE_APP_BASE_PATH', '/build')
+    window.__ENV__ = { VITE_APP_BASE_PATH: undefined }
 
-    expect(getRuntimeEnv('VITE_API_BASE_URL')).toBe('https://build.example.com')
+    expect(getRuntimeEnv('VITE_APP_BASE_PATH')).toBe('/build')
   })
 
   it('prefers a runtime value over its build-time fallback', () => {
-    vi.stubEnv('VITE_API_BASE_URL', 'https://build.example.com')
-    window.__ENV__ = { VITE_API_BASE_URL: 'https://runtime.example.com' }
+    vi.stubEnv('VITE_APP_BASE_PATH', '/build')
+    window.__ENV__ = { VITE_APP_BASE_PATH: '/runtime' }
 
-    expect(getRuntimeEnv('VITE_API_BASE_URL')).toBe(
-      'https://runtime.example.com'
-    )
+    expect(getRuntimeEnv('VITE_APP_BASE_PATH')).toBe('/runtime')
   })
 
   it('allows the runtime config to intentionally clear a build-time value', () => {
-    vi.stubEnv('VITE_API_BASE_URL', 'https://build.example.com')
-    window.__ENV__ = { VITE_API_BASE_URL: '' }
+    vi.stubEnv('VITE_APP_BASE_PATH', '/build')
+    window.__ENV__ = { VITE_APP_BASE_PATH: '' }
 
-    expect(getRuntimeEnv('VITE_API_BASE_URL')).toBe('')
+    expect(getRuntimeEnv('VITE_APP_BASE_PATH')).toBe('')
   })
 })

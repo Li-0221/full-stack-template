@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router'
 import { appConfig } from '@/config/app'
 import { Logo } from '@/assets/logo'
 import { filterNavigationByAccess } from '@/lib/router-access'
-import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +20,6 @@ import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
 
 export function AppSidebar() {
-  const { collapsible, variant } = useLayout()
   const { setOpenMobile } = useSidebar()
   const currentUserQuery = useQuery(currentUserQueryOptions())
   const navGroups = filterNavigationByAccess(
@@ -29,7 +27,7 @@ export function AppSidebar() {
     currentUserQuery.data
   )
   return (
-    <Sidebar collapsible={collapsible} variant={variant}>
+    <Sidebar collapsible='icon' variant='inset'>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

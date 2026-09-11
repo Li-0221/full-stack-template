@@ -25,10 +25,11 @@
 
 ## UI 与配置
 
+- 固定 inset 侧栏布局和 LTR，保留明暗主题与侧栏折叠，不提供布局配置抽屉。
 - 管理端保持紧凑、可扫描，复用现有 shadcn/Radix 组件、语义 token 和 Lucide 图标；保留键盘、焦点、ARIA 和 RTL 行为。
 - `src/components/ui` 是本地维护源码，且不完全受 ESLint 和 Knip 覆盖。shadcn CLI 结果先审查差异，不直接覆盖；基础组件修改需检查调用点和相关测试。
 - 默认验收桌面端；只有需求明确时才扩展移动端。
-- 环境配置只通过 `src/lib/env.ts` 读取。运行时变量为 `VITE_API_BASE_URL` 和 `VITE_APP_BASE_PATH`，本地端口由 `VITE_DEV_PORT` 控制。
+- 环境配置只通过 `src/lib/env.ts` 读取。API 使用同域 `/api/`，本地由 Vite 代理；运行时变量为 `VITE_APP_BASE_PATH`，本地端口由 `VITE_DEV_PORT` 控制。
 - 修改运行时变量时同步更新 `.env.example`、`src/vite-env.d.ts`、`public/env-config.js`、容器入口和测试。
 - 修改 base path、静态资源、Nginx fallback 或运行时 env 注入时，同时验证根路径和非根路径，并保留 `/healthz`、SPA fallback、`env-config.js` 不缓存及 Nginx worker 读取静态文件所需权限。
 

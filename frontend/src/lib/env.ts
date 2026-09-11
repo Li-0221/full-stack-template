@@ -11,6 +11,5 @@ export function normalizeAppBasePath(value: string) {
 }
 
 export const env = Object.freeze({
-  apiBaseUrl: getRuntimeEnv('VITE_API_BASE_URL').trim(),
   appBasePath: normalizeAppBasePath(getRuntimeEnv('VITE_APP_BASE_PATH')),
 })

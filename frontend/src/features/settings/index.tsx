@@ -1,6 +1,5 @@
 import { Outlet } from '@tanstack/react-router'
 import { Separator } from '@/components/ui/separator'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { ShieldCheck, UserCog } from '@/components/icons'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -29,7 +28,6 @@ export function Settings() {
       <Header>
         <Search className='me-auto' />
         <ThemeSwitch />
-        <ConfigDrawer />
         <ProfileDropdown />
       </Header>
 

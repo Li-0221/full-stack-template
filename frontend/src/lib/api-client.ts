@@ -9,7 +9,6 @@ import {
   type AuthTokens,
 } from '@/types/api'
 import { useAuthStore } from '@/stores/auth-store'
-import { env } from './env'
 
 interface AuthAwareRequestConfig extends InternalAxiosRequestConfig {
   _authRetry?: boolean
@@ -140,7 +139,7 @@ function getRefreshPromise(refreshToken: string, epoch: number) {
 }
 
 export const publicApiClient = axios.create({
-  baseURL: env.apiBaseUrl,
+  baseURL: '/',
   timeout: 30_000,
 })
 
@@ -150,7 +149,7 @@ publicApiClient.interceptors.response.use(
 )
 
 export const apiClient = axios.create({
-  baseURL: env.apiBaseUrl,
+  baseURL: '/',
   timeout: 30_000,
 })
 
